@@ -549,17 +549,13 @@ local workflow = {
     },
 };
 
-
 ##########################################################################################################
 // PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
 // The content below is used for parsing the config file in simpleaf internally.
 #########################################################################################################
 
-// local template = import "cite-seq_only_required.jsonnet";
-local utils = import "utils.libsonnet";
-local output = "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test";
-// local utils = std.extVar("utils");
-// local output = std.extVar("output");
+local utils = std.extVar("utils");
+local output = std.extVar("output");
 
 
 // 1. if the reference csv file is provided for ADT and/or HTO, then file 
@@ -569,8 +565,8 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     // check the existence of cell multiplexing experiment
     local hto = utils.get(workflow, "HTO", use_default = true);
     // check the existence of simpleaf index command
-    local hto_index = if hto == null then null else utils.get(hto, "simpleaf index", use_default = true);
-    local hto_quant = if hto == null then null else utils.get(hto, "simpleaf quant", use_default = true);
+    local hto_index = if hto == null then null else utils.get(hto, "simpleaf_index", use_default = true);
+    local hto_quant = if hto == null then null else utils.get(hto, "simpleaf_quant", use_default = true);
     // check the existence of `--ref-seq`
     local hto_index_refseq = if hto_index == null then null else utils.get(hto, "--ref-seq", use_default = true);
     local hto_quant_t2g = if hto_index == null then null else utils.get(hto, "--t2g-map", use_default = true);
@@ -581,8 +577,8 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     // check the existence of cell surface protein barcoding experiment
     local adt = utils.get(workflow, "ADT", use_default = true);
     // check the existence of simpleaf index command
-    local adt_index = if adt == null then null else utils.get(adt, "simpleaf index", use_default = true);
-    local adt_quant = if adt == null then null else utils.get(adt, "simpleaf quant", use_default = true);
+    local adt_index = if adt == null then null else utils.get(adt, "simpleaf_index", use_default = true);
+    local adt_quant = if adt == null then null else utils.get(adt, "simpleaf_quant", use_default = true);
     // check the existence of `--ref-seq`
     local adt_index_refseq = if adt_index == null then null else utils.get(adt, "--ref-seq", use_default = true);
     local adt_quant_t2g = if adt_index == null then null else utils.get(adt, "--t2g-map", use_default = true);
@@ -593,22 +589,22 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     {
         // Update HTO ref-seq as the output of awk command
         [if hto != null then "HTO"] +: {
-            [if hto_index != null then "simpleaf index"]+: {
+            [if hto_index != null then "simpleaf_index"]+: {
                 [if hto_index_refseq == null && fb_ref_path.hto != null then "--ref-seq"]: hto_fasta_path,
             },
 
-            [if hto_quant != null then "simpleaf quant"]+: {
+            [if hto_quant != null then "simpleaf_quant"]+: {
                 [if hto_quant_t2g == null && fb_ref_path.hto != null then "--t2g-map"]: hto_t2g_path,
             }
         },
 
         // Update ADT ref-seq as the output of awk command
         [if adt != null then "ADT"] +: {
-            [if adt_index != null then "simpleaf index"]+: {
+            [if adt_index != null then "simpleaf_index"]+: {
                 [if adt_index_refseq == null then "--ref-seq"]: adt_fasta_path,
             },
 
-            [if adt_quant != null then "simpleaf quant"]+: {
+            [if adt_quant != null then "simpleaf_quant"]+: {
                 [if adt_quant_t2g == null then "--t2g-map"]: adt_t2g_path,
             }
         },
@@ -694,13 +690,13 @@ local get_fb_ref_path(workflow) =
     local hto = utils.get(workflow["Recommended Simpleaf Configuration"], "HTO", use_default = true);
     // check the existence of simpleaf index command
     local hto_index = utils.get(hto, "simpleaf_index", use_default = true);
-    // check the existence of `--ref-seq`1
+    // check the existence of reference file
     local hto_ref_path = utils.get(hto_index, "HTO reference barcode CSV file path", use_default = true);
     // check the existence of cell surface barcoding experiment
     local adt = utils.get(workflow["Recommended Simpleaf Configuration"], "ADT", use_default = true);
     // check the existence of simpleaf index command
     local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
-    // check the existence of `--ref-seq`1
+    // check the existence of reference file
     local adt_ref_path = utils.get(adt_index, "ADT reference barcode CSV file path", use_default = true);
 
     // 
