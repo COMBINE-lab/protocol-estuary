@@ -267,7 +267,7 @@
             [field_name] +:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if  std.objectHas(field, "Step") then
+                    if std.objectHas(field, "Step") then
                         if !std.objectHas(field, "Program Name") then
                             error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % path
                         else
@@ -297,8 +297,8 @@
         local oc = "Optional Simpleaf Configuration";
         local rc = "Recommended Simpleaf Configuration";
         local ec = "External Commands";
-        local mi = "meta_info";    
-        // $.flat_arg_groups($.get(o, ec, use_default=true)) +
+        local mi = "meta_info";
+        // assemble the workflow
         {[ec]: $.get(o, ec, use_default=true)} +
             $.flat_arg_groups($.get(o, oc, use_default=true)) + 
             $.flat_arg_groups($.get(o, rc, use_default=true)) + 
@@ -309,14 +309,14 @@
     // generated using RNA reads as the explicit permitlist for surface protein and cell multiplexing reads.
     // TODO: rna to ADT batcode mapping https://github.com/COMBINE-lab/salmon/discussions/576#discussioncomment-235459
     add_explicit_pl(o):: 
-        local rna_m_bc = $.get($.get($.get(o, "rna"), "simpleaf quant"), "--output") + "/af_quant/alevin/quants_mat_rows.txt";
+        local rna_m_bc = $.get($.get($.get(o, "rna"), "simpleaf_quant"), "--output") + "/af_quant/alevin/quants_mat_rows.txt";
     {
         // assign explicit pl for cell multiplexing 
         [
             if std.objectHas(o, "cell_multiplexing") then
                 local cm = $.get(o, "cell_multiplexing");
-                if std.objectHas(cm, "simpleaf quant") then
-                    local q = $.get(cm, "simpleaf quant");
+                if std.objectHas(cm, "simpleaf_quant") then
+                    local q = $.get(cm, "simpleaf_quant");
                     if 
                         !std.objectHas(q, "--explicit-pl") &&
                         !std.objectHas(q, "--unfiltered-pl") &&
@@ -327,7 +327,7 @@
                         "cell_multiplexing"
         ]+: 
         {
-            "simpleaf quant"+: {
+            "simpleaf_quant"+: {
                 "--explicit-pl": rna_m_bc
             }
         },
@@ -335,8 +335,8 @@
         [
             if std.objectHas(o, "cell_surface_protein") then
                 local cm = $.get(o, "cell_surface_protein");
-                if std.objectHas(cm, "simpleaf quant") then
-                    local q = $.get(cm, "simpleaf quant");
+                if std.objectHas(cm, "simpleaf_quant") then
+                    local q = $.get(cm, "simpleaf_quant");
                     if 
                         !std.objectHas(q, "--explicit-pl") &&
                         !std.objectHas(q, "--unfiltered-pl") &&
@@ -347,7 +347,7 @@
                     "cell_surface_protein"
         ]+: 
         {
-            "simpleaf quant"+: {
+            "simpleaf_quant"+: {
                 "--explicit-pl": rna_m_bc
             }
         },
