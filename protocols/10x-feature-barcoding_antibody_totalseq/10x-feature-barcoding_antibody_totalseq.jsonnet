@@ -1,8 +1,7 @@
 
-// feature barcoding can have three parts
-// 1. antibody barcoding (optional)
-// 2. cell multiplexing (optional)
-// 3. RNA (required)
+// 10x feature barcoding has two parts
+// 1. Gene Expression
+// 2. Antibody Capture
 #############################################################################
 # README:
 
@@ -13,15 +12,10 @@
 
 # All fields that are null, empty array ([]), and empty dictionary ({}) will be pruned (ignored).
 
-# If you don"t have the antibody barcoding tag (ADT) and/or cell hash tag oligo (HTO) reads, 
-# you can remove the whole fields related to them or chance the "Step" of their commands as a quoted negative integer.
-# For example, you can change the field with name "HTO" to `"HTO": {}` in the main section *and* section "Optional Configuration",
-# or you can change the “Step” of its realted commands, namely "simpleaf index", "simpleaf quant", "HTO ref gunzip" and
-# "HTO reference CSV to FASTA" to negative integers, for example, -1.
-
 # If you want tyo skip invoking some commands, for example, when the exactly same command had been run before, 
 # you can also change their "“Step”" to a negative integer, for example, -1. 
 # Simpleaf will ignore all commands with a negative “Step”. 
+# Alternatively, you can set the `--skip-step` flag when running simpleaf workflow using comma-separated step numbers.  
 
 # NOTE: You can pass optional simpleaf arguments specified in the "Optional Config" section.
 
@@ -31,21 +25,20 @@ local workflow = {
 
     // Meta information
     "meta_info": {
-        "template_name":  "CITE-seq (10x Chromium 3' v2)",
-        "template_id": "citeseq_10xv2",
+        "template_name":  "10x Chromium 3' Antibodies Feature Barcoding (TotalSeq-B/C)",
+        "template_id": "10x-feature-barcoding_antibody_totalseq",
         "template_version": "0.0.1",
+
         // This value will be assigned to all simpleaf commands that have no --threads arg specified
         // Optional: commands will use their default setting if this is null.
-
         "threads": null, // "threads": "16",
-        
+
         // The parent directory of all simpleaf command output folders.
         // If this is leaved as null, you have to specify `--output` when running `simpleaf workflow`
         "output": null, // "output": "/path/to/output",
-
     },
 
-#######################################################################################################################
+######################################################################################################################
 // *Recommended* Configuration: 
 //  For MOST users, the fields listed in the "Recommended Configuration" section are the only fields
 //  that needs to be filled. You should replace all null values with valid values, 
@@ -57,13 +50,15 @@ local workflow = {
     // **For most users**, ONLY the information in the "Recommended Configuration" section needs to be completed.
     // For advanced usage, please check the "Optional Configuration" field.
     "Recommended Configuration": {
-        // Information needed to process RNA reads
-        "RNA": {
+
+        // Information needed to process gene expression reads
+        "gene_expression": {
             // Arguments for running `simpleaf index`
             "simpleaf_index": {
                 // these two fields are required for all command records.
                 "Step": 1,
                 "Program Name": "simpleaf index",
+
                 // Recommeneded Reference: spliced + intronic transcriptome (splici) 
                 // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-intronic-transcriptome-reference
                 // You can find other reference options in the "Optional Configuration" field. You must choose one type of reference
@@ -72,8 +67,9 @@ local workflow = {
                     "--fasta": null,
                     // gene annotation gtf file of the studied species
                     "--gtf": null,
-                    // read length, usually it is 98 for 10xv2 datasets.
-                    "--rlen": null,
+                    // read length, usually it is "91" for 10xv3 datasets.
+                    // Please use a QUOTED number here
+                    "--rlen": null, // "--rlen": "91",
                 },
             },
 
@@ -86,14 +82,14 @@ local workflow = {
                 "Recommended Mapping option": {
                     "Mapping Reads FASTQ Files": {
                         // read1 (technical reads) files separated by comma (,)
-                        // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
+                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!) 
                         // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        "--reads1": null,
+                        "--reads1": "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L001_R1_001.fastq.gz,/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L002_R1_001.fastq.gz",
 
                         // read2 (biological reads) files separated by comma (,)
-                        // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                        // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        "--reads2": null,
+                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!) 
+                        // $ find -L your/fastq/absolute/path -name "*_R2_*" -type f | sort | paste -sd, -
+                        "--reads2": "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L001_R2_001.fastq.gz,/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L002_R2_001.fastq.gz",
                     },
                 },
             }
@@ -102,90 +98,52 @@ local workflow = {
         // This field contains all the information for analyzing cell surface protein barcoding (ADT) reads
         // Only required information are listed here. 
         // For optional arguments, Please check the "Optional Arguments" field.
-        "ADT": {
+        "antibody_capture": {
             // Arguments used for running `simpleaf index`
             // This is required UNLESS you have an existing salmon index. In that case, you can change the Step of this "simpleaf index" command in the "Optional Configuration" to a quoted negative integer.
             "simpleaf_index": {
-                "Step": 9,
+                "Step": 8,
                 "Program Name": "simpleaf index",
-                // The path to the antibody derived tags' (ADT) reference barcode CSV file
-                // The file should ends with .csv or .csv.gz.
-                // If your file is already in FASTA format, use that as the "--ref-seq" field in the Optional Configuration
-                // and leave this field as null.
-                "ADT reference barcode CSV file path": null,
+                
+                // The path to the feature reference molecule structure and the corresponding reference barcode sequence.
+                // Details can be found at https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis#feature-ref 
+                "Feature Reference CSV": "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_feature_ref.csv",
             },
 
             // arguments for running `simpleaf quant`
             "simpleaf_quant": {
-                "Step": 10,
+                "Step": 9,
                 "Program Name": "simpleaf quant",
                 // Map sequencing reads against the reference index generated by simpleaf index call
                 "Recommended Mapping Option": {
                         // read1 (technical reads) files separated by comma (,)
-                        // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
+                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!)
                         // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        "--reads1": null,
+                        "--reads1": "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L001_R1_001.fastq.gz,/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L002_R1_001.fastq.gz",
 
                         // read2 (biological reads) files separated by comma (,)
-                        // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                        // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        "--reads2": null,
+                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!)
+                        // $ find -L your/fastq/absolute/path -name "*_R2_*" -type f | sort | paste -sd, -
+                        "--reads2": "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L001_R2_001.fastq.gz,/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results/pbmc_1k_protein_v3_fastqs/pbmc_1k_protein_v3_gex_fastqs/pbmc_1k_protein_v3_gex_S1_L002_R2_001.fastq.gz",
                     },
             },
         },
-
-        // This field contains all the information for analyzing cell multiplexing barcoding or sample hashing (HTO) reads.
-        // Only required information are listed here.
-        // For optional arguments, Please refer to the "Optional Arguments" field.
-        "HTO": {
-            // arguments used for running `simpleaf index`
-            // This is not required if you have an existing salmon index
-            // In that case, you can remove the whole "simpleaf index" field
-            // and specify the path to the index using `-index` in the `simpleaf quant` field 
-            "simpleaf_index": {
-                "Step": 11,
-                "Program Name": "simpleaf index",
-                // The path to the hash tag oligos (ADT) reference barcode CSV file
-                // The file should be ending with .csv or .csv.gz.
-                // Current we do not support other format.
-                "HTO reference barcode CSV file path": null,
-            },
-
-            // arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                "Step": 12,
-                "Program Name": "simpleaf quant",
-                // Map sequencing reads against the reference index generated by simpleaf index call
-                "Recommended Mapping Option": {
-                        // read1 (technical reads) files separated by comma (,)
-                        // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                        // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        "--reads1": null,
-
-                        // read2 (biological reads) files separated by comma (,)
-                        // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                        // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        "--reads2": null,
-                },
-            },
-        },
     },
-
-
-
-    
 ##########################################################################################################
 // OPTIONAL : The configuration options below are optional, and may be of most interest to advanced users
 #########################################################################################################
 
     "Optional Configuration": {
         // Optional arguments for processing RNA reads
-        "RNA": {
+        "gene_expression": {
             // Optioanal arguments for running `simpleaf index`
             "simpleaf_index": {
                 // The required fields
                 "Step": 1,
                 "Program Name": "simpleaf index",
+
+                // simpleaf workflow will ignore all commands with "Active": false
+                "Active": true,
 
                 "Other Reference Options": {
                     // spliced + unspliced transcriptome
@@ -226,6 +184,9 @@ local workflow = {
                 // The required fields first 
                 "Step": 2,
                 "Program Name": "simpleaf quant",
+
+                // simpleaf workflow will ignore all commands with "Active": false
+                "Active": true,
 
                 // the transcript name to gene name mapping TSV file.
                 // Simpleaf will find the correct t2g map file for splici and spliceu reference.
@@ -277,7 +238,9 @@ local workflow = {
                     // If choosing this, change the null to the path to the whitelist file. 
                     "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
                 },
+                
                 "--chemistry": "10xv2",
+
                 "--resolution": "cr-like",
                 "--expected-ori": "fw",
 
@@ -294,32 +257,36 @@ local workflow = {
 
             }
         },
-        "ADT": {
+        "antibody_capture": {
             // arguments used for running `simpleaf index`
             "simpleaf_index": {
                 // The required fields first
+                "Step": 8,
+                "Program Name": "simpleaf index",
+                // simpleaf workflow will ignore all commands with "Active": false
+                "Active": true,
+
+                // The path to the reference sequence FASTA file
+                // Only change this if the tag barcode reference file is in the FASTA format
+                "--ref-seq": null,
+
+                "--kmer-length": "7",
+                "--output": null,
+                "--threads": null,
+                "--sparse": null,
+                "--overwrite": null,
+                "--use-piscem": null,
+                "--minimizer-length": null,
+                "--keep-duplicates": null,
+            },
+
+            // Optional arguments for running `simpleaf quant`
+            "simpleaf_quant": {
+                // The Step of this experiment
                 "Step": 9,
-                "Program Name": "simpleaf index",
-
-                // The path to the reference sequence FASTA file
-                // Only change this if the tag barcode reference file is in the FASTA format
-                "--ref-seq": null,
-
-                "--kmer-length": "7",
-                "--output": null,
-                "--threads": null,
-                "--sparse": null,
-                "--overwrite": null,
-                "--use-piscem": null,
-                "--minimizer-length": null,
-                "--keep-duplicates": null,
-            },
-
-            // Optional arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                // The Step of this experiment
-                "Step": 10,
                 "Program Name": "simpleaf quant",
+                // simpleaf workflow will ignore all commands with "Active": false
+                "Active": true,
 
                 // the transcript name to gene name mapping TSV file
                 // This is required if `--ref-seq` is specified in the corresponding simpleaf index command. 
@@ -372,98 +339,7 @@ local workflow = {
                     // If choosing this, change the null to the path to the whitelist file. 
                     "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
                 },
-                "--chemistry": "1{b[16]u[10]}2{r[15]}",
-                "--resolution": "cr-like",
-                "--expected-ori": "fw",
-
-                // If null, this argument will be automatically completed by the template.
-                "--output": null,
-                "--threads": null,
-                "--min-reads": null,
-                "--index": null,
-                "--use-piscem": null,
-                "--use-selective-alignment": null,
-            },
-        },
-        "HTO": {
-            // arguments used for running `simpleaf index`
-            "simpleaf_index": {
-                // The required fields first
-                "Step": 11,
-                "Program Name": "simpleaf index",
-
-                // The path to the reference sequence FASTA file
-                // Only change this if the tag barcode reference file is in the FASTA format
-                "--ref-seq": null,
-
-                "--kmer-length": "7",
-                "--output": null,
-                "--threads": null,
-                "--sparse": null,
-                "--overwrite": null,
-                "--use-piscem": null,
-                "--minimizer-length": null,
-                "--keep-duplicates": null,
-            },
-
-            // Optional arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                // The Step of this experiment
-                "Step": 12,
-                "Program Name": "simpleaf quant",
-
-                // the transcript name to gene name mapping TSV file
-                // This is required if `--ref-seq` is specified in the corresponding simpleaf index command. 
-                "--t2g-map": null,
-
-                "Other Mapping Options": {
-                    // Option 1:
-                    // If you have built the reference index already, 
-                    // you can leave the simpleaf index section unchanged
-                    // and specify the path to the index here  
-                    "1. Mapping Reads FASTQ Files against an existing index": {
-                        // read1 (technical reads) files separated by comma (,)
-                        "--reads1": null,
-
-                        // read2 (biological reads) files separated by comma (,)
-                        "--reads2": null,
-
-                        // the path to an existing salmon/piscem reference index
-                        "--index": null
-                    },
-
-                    // Option 2:
-                    // Choose only if you have an existing mapping directory and don"t want to rerun mapping
-                    "2. Existing Mapping Directory": {
-                        // the path to an existing salmon/piscem mapping result directory
-                        "--map-dir": null,
-                    },
-                },
-
-                // By default, the workflow will use the reported cell barcodes in the gene count matrix
-                // obtained from processing RNA reads as the explicit permit list for feature barcoding reads.
-                // If you want to choose another cell fitlering option, please specify one of the followings.
-                "Other Cell Filtering Options": {
-                    // 1. No cell filtering, but correct cell barcodes according to a permitlist file
-                    //    if you don"t want to use this, change the value from "" to null. 
-                    // *RECOMMENDED*
-                    "--unfiltered-pl": null, // or "--unfiltered-pl": "" 
-                    
-                    // 2. knee finding cell filtering. If choosing this, change the value from null to "".
-                    "--knee": null, // or "--knee": null,
-
-                    // 3. A hard threshold. If choosing this, change the value from null to an integer
-                    "--forced-cells": null, // or "--forced-cells": "INT", for example, "--forced-cells": "3000"
-
-                    // 4. A soft threshold. If choosing this, change the null to an integer
-                    "--expect-cells": null, //or "--expect-cells": "INT", for example, "--expect-cells": "3000"
-
-                    // 5. filter cells using an explicit whitelist. Only use when you know exactly the 
-                    // true barcodes. 
-                    // If choosing this, change the null to the path to the whitelist file. 
-                    "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
-                },
-                "--chemistry": "1{b[16]u[10]}2{r[15]}",
+                "--chemistry": "1{b[16]u[12]}2{x[10]r[15]x:}",
                 "--resolution": "cr-like",
                 "--expected-ori": "fw",
 
@@ -507,65 +383,49 @@ local workflow = {
 
 
     "External Commands": {
-        // This command is used for converting the 
-        // reference feature barcodes' TSV file into FASTA file
-        // before building the index
-        "HTO ref gunzip": {
+        // This function download barcode translation from cell ranger github repo
+        "barcode translation file fetch": {
             "Step": 3,
-            "Program Name": "gunzip",
+            "Program Name": "wget",
             "Active": true,
-            "Arguments": ["-c","TBD",">","TBD"],
+            "Arguments": ["-O","TBD", "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz"],
         },
 
-        // This command is used for converting the 
-        // reference feature barcodes' TSV file into FASTA file
-        // before building the index
-        "ADT ref gunzip": {
+        // This file gunzip downloaded barcode translation file
+        "barcode translation file gunzip": {
             "Step": 4,
             "Program Name": "gunzip",
             "Active": true,
             "Arguments": ["-c","TBD",">","TBD"],
         },
 
-
-        // This command is used for converting the 
-        // reference feature barcodes' TSV file into FASTA file
-        // before building the index
-        "HTO reference CSV to t2g": {
+        // Translate RNA barcode to feature barcode
+        "barcode translation": {
             "Step": 5,
             "Program Name": "awk",
             "Active": true,
-            "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'","TBD",">","TBD"],
+            "Arguments": ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "TBD","TBD"],
         },
 
         // This command is used for converting the 
         // reference feature barcodes' TSV file into FASTA file
         // before building the index
-        "ADT reference CSV to t2g": {
+        "Antibody reference CSV to t2g": {
             "Step": 6,
             "Program Name": "awk",
             "Active": true,
             "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'","TBD",">","TBD"],
         },
-
-        // This command is used for converting the 
-        // reference feature barcodes' TSV file into FASTA file
-        // before building the index
-        "HTO reference CSV to FASTA": {
-            "Step": 7,
-            "Program Name": "awk",
-            "Active": true,
-            "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$4}'","TBD",">","TBD"]
-        },
         
         // This command is used for converting the 
         // reference feature barcodes' TSV file into FASTA file
         // before building the index
-        "ADT reference CSV to FASTA": {
-            "Step": 8,
+        "Antibody reference CSV to FASTA": {
+            "Step": 7,
             "Program Name": "awk",
             "Active": true,
-            "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$4}'","TBD",">","TBD"]
+
+            "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'","TBD",">","TBD"]
         },
     },
 };
@@ -575,52 +435,41 @@ local workflow = {
 // The content below is used for parsing the config file in simpleaf internally.
 #########################################################################################################
 
-local utils = std.extVar("utils");
-local output = std.extVar("output");
-
+// local utils = std.extVar("utils");
+// local output = std.extVar("output");
+local utils = import "utils.libsonnet";
+local output = "/mnt/scratch4/dongze/simpleaf_tutorial/simpleaf_workflow_test/10x_fb_results";
+// local output = ".";
 
 // 1. if the reference csv file is provided for ADT and/or HTO, then file 
 // 1. if --ref-seq is in both HTO and ADT, turn off awk calls for converting csv to t2g
 // 2. if --t2g-map is in both HTO and ADT, turn off awk calls 
 local activate_ext_calls(workflow, output_path, fb_ref_path) = 
-    // check the existence of cell multiplexing experiment
-    local hto = utils.get(workflow, "HTO", use_default = true);
-    // check the existence of simpleaf index command
-    local hto_index = if hto == null then null else utils.get(hto, "simpleaf_index", use_default = true);
-    local hto_quant = if hto == null then null else utils.get(hto, "simpleaf_quant", use_default = true);
-    // check the existence of `--ref-seq`
-    local hto_index_refseq = if hto_index == null then null else utils.get(hto, "--ref-seq", use_default = true);
-    local hto_quant_t2g = if hto_index == null then null else utils.get(hto, "--t2g-map", use_default = true);
-    local hto_ref_csv_path = output_path + "/hto_reference.csv";
-    local hto_fasta_path = output_path + "/hto_reference_barcode.fasta";
-    local hto_t2g_path = output_path + "/hto_t2g.tsv";
-
     // check the existence of cell surface protein barcoding experiment
-    local adt = utils.get(workflow, "ADT", use_default = true);
+    local adt = utils.get(workflow, "antibody_capture", use_default = true);
     // check the existence of simpleaf index command
-    local adt_index = if adt == null then null else utils.get(adt, "simpleaf_index", use_default = true);
-    local adt_quant = if adt == null then null else utils.get(adt, "simpleaf_quant", use_default = true);
+    local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
+    local adt_quant = utils.get(adt, "simpleaf_quant", use_default = true);
     // check the existence of `--ref-seq`
-    local adt_index_refseq = if adt_index == null then null else utils.get(adt, "--ref-seq", use_default = true);
-    local adt_quant_t2g = if adt_index == null then null else utils.get(adt, "--t2g-map", use_default = true);
-    local adt_ref_csv_path = output_path + "/adt_reference_barcode.csv";
-    local adt_fasta_path = output_path + "/adt_reference_barcode.fasta";
-    local adt_t2g_path = output_path + "/adt_t2g.tsv";
+    local adt_index_refseq = utils.get(adt, "--ref-seq", use_default = true);
+    local adt_quant_t2g = utils.get(adt, "--t2g-map", use_default = true);
+    local adt_fasta_path = output_path + "/feature_reference_barcode.fasta";
+    local adt_t2g_path = output_path + "/feature_t2g.tsv";
+
+    local adt_fasta_path = output_path + "/feature_reference_barcode.fasta";
+
+    // get bc translation related files
+    local bt_file_gz = output_path + "/3M-february-2018.txt.gz";
+    local bt_file = output_path + "/3M-february-2018.txt";
+
+    local rna = utils.get(workflow, "gene_expression", use_default = true);
+    local rna_quant = utils.get(rna, "simpleaf_quant", use_default = true);
+    local rna_quant_output = utils.get(rna_quant, "--output", use_default = true);
+    local rna_quant_bc_file = if rna_quant_output == null then null else rna_quant_output + "/af_quant/alevin/quants_mat_rows.txt";
 
     {
-        // Update HTO ref-seq as the output of awk command
-        [if hto != null then "HTO"] +: {
-            [if hto_index != null then "simpleaf_index"]+: {
-                [if hto_index_refseq == null && fb_ref_path.hto != null then "--ref-seq"]: hto_fasta_path,
-            },
-
-            [if hto_quant != null then "simpleaf_quant"]+: {
-                [if hto_quant_t2g == null && fb_ref_path.hto != null then "--t2g-map"]: hto_t2g_path,
-            }
-        },
-
         // Update ADT ref-seq as the output of awk command
-        [if adt != null then "ADT"] +: {
+        [if adt != null then "antibody_capture"] +: {
             [if adt_index != null then "simpleaf_index"]+: {
                 [if adt_index_refseq == null then "--ref-seq"]: adt_fasta_path,
             },
@@ -632,44 +481,43 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
 
         // Add output file to awk commands.
         "External Commands" +: {
-            "HTO ref gunzip" +: {
-                [if !std.endsWith(fb_ref_path.hto, "gz") then "Step"]: -3,
-                "Arguments": ["-c",fb_ref_path.hto,">",hto_ref_csv_path],
+            "barcode translation file fetch"+: {
+                "Arguments": [
+                    "-O",
+                    bt_file_gz, 
+                    "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz"],
+            },
+
+            // This file gunzip downloaded barcode translation file
+            "barcode translation file gunzip"+: {
+                "Arguments": [
+                    "-c",
+                    bt_file_gz,
+                    ">",
+                    bt_file
+                ],
+            },
+
+            "barcode translation"+: {
+                "Arguments": [
+                    "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", 
+                    bt_file,
+                    rna_quant_bc_file,
+                    ">",
+                    rna_quant_bc_file
+                ],
             },
 
             // This command is used for converting the 
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
-
-            "ADT ref gunzip" +: {
-                [if !std.endsWith(fb_ref_path.adt, "gz") then "Step"]: -4,
-                "Arguments": ["-c",fb_ref_path.adt,">",adt_ref_csv_path],
-            },
-            // This command is used for converting the 
-            // reference feature barcodes' TSV file into FASTA file
-            // before building the index
-            "HTO reference CSV to t2g" +: {
-                [if hto_index_refseq != null then "Step"]: -5,
-                    "Arguments": [
-                        "-F",
-                        "','",
-                        "'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'",
-                        if std.endsWith(fb_ref_path.hto, "gz") then hto_ref_csv_path else fb_ref_path.hto,
-                        ">",
-                        hto_t2g_path
-                    ],
-            },
-
-            // This command is used for converting the 
-            // reference feature barcodes' TSV file into FASTA file
-            // before building the index
-            "ADT reference CSV to t2g" +: {
-                [if adt_index_refseq != null then "Step"]: -6,
+            "Antibody reference CSV to t2g" +: {
+                [if adt_index_refseq != null then "Active"]: false,
                 "Arguments": [
                     "-F",
                     "','",
                     "'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'",
-                    if std.endsWith(fb_ref_path.adt, "gz") then adt_ref_csv_path else fb_ref_path.adt,
+                    fb_ref_path.adt,
                     ">",
                     adt_t2g_path],
             },
@@ -677,52 +525,28 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // This command is used for converting the 
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
-            "HTO reference CSV to FASTA" +: {
-                [if hto_index_refseq != null then "Step"]: -7,
+            "Antibody reference CSV to FASTA" +: {
+                [if adt_index_refseq != null then "Active"]: false,
                 "Arguments": [
                     "-F",
                     "','",
-                    "'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$4}'",
-                    if std.endsWith(fb_ref_path.hto, "gz") then hto_ref_csv_path else fb_ref_path.hto,
-                    ">",
-                    hto_fasta_path,
-                ],
-            },
-
-            // This command is used for converting the 
-            // reference feature barcodes' TSV file into FASTA file
-            // before building the index
-            "ADT reference CSV to FASTA" +: {
-                [if adt_index_refseq != null then "Step"]: -8,
-                "Arguments": [
-                    "-F",
-                    "','",
-                    "'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$4}'",
-                    if std.endsWith(fb_ref_path.adt, "gz") then adt_ref_csv_path else fb_ref_path.adt,
+                    "'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'",
+                    fb_ref_path.adt,
                     ">",
                     adt_fasta_path],
             },
-
         },
     };
 
 local get_fb_ref_path(workflow) = 
-    // check the existence of cell multiplexing experiment
-    local hto = utils.get(workflow["Recommended Configuration"], "HTO", use_default = true);
-    // check the existence of simpleaf index command
-    local hto_index = utils.get(hto, "simpleaf_index", use_default = true);
-    // check the existence of reference file
-    local hto_ref_path = utils.get(hto_index, "HTO reference barcode CSV file path", use_default = true);
     // check the existence of cell surface barcoding experiment
-    local adt = utils.get(workflow["Recommended Configuration"], "ADT", use_default = true);
+    local adt = utils.get(workflow["Recommended Configuration"], "antibody_capture", use_default = true);
     // check the existence of simpleaf index command
     local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
     // check the existence of reference file
-    local adt_ref_path = utils.get(adt_index, "ADT reference barcode CSV file path", use_default = true);
+    local adt_ref_path = utils.get(adt_index, "Feature Reference CSV", use_default = true);
 
-    // 
     {
-        "hto": hto_ref_path,
         "adt": adt_ref_path
     }
 ;
@@ -732,51 +556,25 @@ local get_fb_ref_path(workflow) =
 // TODO: rna to ADT batcode mapping https://github.com/COMBINE-lab/salmon/discussions/576#discussioncomment-235459
 local add_explicit_pl(o) =
     // check the existence of cell surface protein barcoding experiment
-    local adt = utils.get(o, "ADT", use_default = true);
+    local adt = utils.get(o, "antibody_capture", use_default = true);
     // check the existence of simpleaf index command
     local adt_quant = utils.get(adt, "simpleaf_quant", use_default = true);
 
-    // check the existence of cell multiplexing barcoding experiment
-    local hto = utils.get(o, "HTO", use_default = true);
-    // check the existence of simpleaf index command
-    local hto_quant = utils.get(hto, "simpleaf_quant", use_default = true);
-
-    local rna = utils.get(o, "RNA", use_default = true);
+    local rna = utils.get(o, "gene_expression", use_default = true);
     local rna_quant = utils.get(rna, "simpleaf_quant", use_default = true);
     local rna_quant_output = utils.get(rna_quant, "--output", use_default = true);
     local rna_quant_bc_file = if rna_quant_output == null then null else rna_quant_output + "/af_quant/alevin/quants_mat_rows.txt";
     {
-        // assign explicit pl for ADT 
+        // assign explicit pl for cell multiplexing 
         [
-            if adt_quant != null &&  rna_quant_bc_file != null then
-                if!std.objectHas(adt_quant, "--knee") &&
+            if adt_quant != null && rna_quant_bc_file != null then
+                if !std.objectHas(adt_quant, "--knee") &&
                     !std.objectHas(adt_quant, "--explicit-pl") &&
+                    !std.objectHas(adt_quant, "--unfiltered-pl") &&
                     !std.objectHas(adt_quant, "--forced-cells") &&
-                    !std.objectHas(adt_quant, "--expect-cells") &&
-                    !std.objectHas(adt_quant, "--unfiltered-pl")
+                    !std.objectHas(adt_quant, "--expect-cells")
                 then
-                    "ADT"
-                else
-                    null
-            else
-                null
-        ]+: 
-        {
-            "simpleaf_quant"+: {
-                "--explicit-pl": rna_quant_bc_file
-            }
-        },
-
-        // assign explicit pl for HTO
-        [
-            if hto_quant != null && rna_quant_bc_file != null then
-                if !std.objectHas(hto_quant, "--knee") &&
-                    !std.objectHas(hto_quant, "--explicit-pl") &&
-                    !std.objectHas(hto_quant, "--forced-cells") &&
-                    !std.objectHas(hto_quant, "--expect-cells")&&
-                    !std.objectHas(hto_quant, "--unfiltered-pl")
-                then
-                    "HTO"
+                    "antibody_capture"
                 else
                     null
             else

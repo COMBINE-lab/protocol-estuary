@@ -294,8 +294,8 @@
     // If fir a specific simpleaf command, an argument appears in both required and optional sections, 
     // Then the value provided in the required section will be used 
     combine_main_sections(o):: 
-        local oc = "Optional Simpleaf Configuration";
-        local rc = "Recommended Simpleaf Configuration";
+        local oc = "Optional Configuration";
+        local rc = "Recommended Configuration";
         local ec = "External Commands";
         local mi = "meta_info";
         // assemble the workflow
@@ -305,63 +305,15 @@
             {[mi]: $.get(o, mi, use_default=true)}
     ,
 
-    // This function assigns the cell barcde list (rownames) reporeted in the gene count matrix
-    // generated using RNA reads as the explicit permitlist for surface protein and cell multiplexing reads.
-    // TODO: rna to ADT batcode mapping https://github.com/COMBINE-lab/salmon/discussions/576#discussioncomment-235459
-    add_explicit_pl(o):: 
-        local rna_m_bc = $.get($.get($.get(o, "rna"), "simpleaf_quant"), "--output") + "/af_quant/alevin/quants_mat_rows.txt";
-    {
-        // assign explicit pl for cell multiplexing 
-        [
-            if std.objectHas(o, "cell_multiplexing") then
-                local cm = $.get(o, "cell_multiplexing");
-                if std.objectHas(cm, "simpleaf_quant") then
-                    local q = $.get(cm, "simpleaf_quant");
-                    if 
-                        !std.objectHas(q, "--explicit-pl") &&
-                        !std.objectHas(q, "--unfiltered-pl") &&
-                        !std.objectHas(q, "--knee") &&
-                        !std.objectHas(q, "--forced-cells") &&
-                        !std.objectHas(q, "--expect-cells")
-                    then
-                        "cell_multiplexing"
-        ]+: 
-        {
-            "simpleaf_quant"+: {
-                "--explicit-pl": rna_m_bc
-            }
-        },
-        // assign explicit pl for cell surface protein
-        [
-            if std.objectHas(o, "cell_surface_protein") then
-                local cm = $.get(o, "cell_surface_protein");
-                if std.objectHas(cm, "simpleaf_quant") then
-                    local q = $.get(cm, "simpleaf_quant");
-                    if 
-                        !std.objectHas(q, "--explicit-pl") &&
-                        !std.objectHas(q, "--unfiltered-pl") &&
-                        !std.objectHas(q, "--knee") &&
-                        !std.objectHas(q, "--forced-cells") &&
-                        !std.objectHas(q, "--expect-cells")
-                    then
-                    "cell_surface_protein"
-        ]+: 
-        {
-            "simpleaf_quant"+: {
-                "--explicit-pl": rna_m_bc
-            }
-        },
-    },
-
     // This function returns only the missing arguments in the 
-    // Recommended Simpleaf Configuration section.
+    // Recommended Configuration section.
     // Those arguments are the essential config for å workflow
     write_recommended_args(o):: 
         $.get_missing_args(
             {
                 [field_name]: $.get(o, field_name)
                 for field_name in std.objectFields(o)
-                if field_name == "Recommended Simpleaf Configuration"
+                if field_name == "Recommended Configuration"
             }
     ),
 
@@ -469,6 +421,7 @@
             // This is used for deciding by which order the commands are run
             "Step": null,
             "Program Name": 'simpleaf index',
+            "Active": null,
 
             // output directory
             "--output": null,
@@ -500,6 +453,7 @@
             // This is used for deciding by which order the commands are run
             "Step": null,
             "Program Name": 'simpleaf quant',
+            "Active": null,
 
             // Options
             '--chemistry': null,
