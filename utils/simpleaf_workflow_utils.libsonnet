@@ -47,12 +47,12 @@
                 if std.objectHas(field, "Program Name") then
                     local program_name = $.get(field, "Program Name"); 
                     // check if it is a simpleaf command
-                    if std.objectHas($.args, program_name) then
+                    if std.objectHas($.SimpleafPrograms, program_name) then
                         if std.foldl(
                             $.logical_and, 
                             // here we check if each arg in this command record 
                             // is a valid argument
-                            std.map(function(x, arg_obj = $.get($.args, program_name))
+                            std.map(function(x, arg_obj = $.get($.SimpleafPrograms, program_name))
                                 if std.objectHas(arg_obj, x) then 
                                     true
                                 else
@@ -112,13 +112,15 @@
     // get the valid output dir
     // input: a top level arg called output and a user provided arg object
     
-    get_output(cmd, config):: 
-    if cmd == null && $.get(config.meta_info, "output", use_default=true) == null then
-        error "Output directory must be specified as the `--output` argument when calling `simpleaf workflow` and/or as the `output` metadata in the config file; Cannot proceed."
-    else if $.get(config.meta_info, "output", use_default=true) != null then
-            $.get(config.meta_info, "output")
-    else
-        cmd
+    get_output(cmd, o)::
+        local meta_info = $.get(o, "meta_info", use_default=true);
+        local config = $.get(meta_info, "output", use_default=true);
+        if cmd == null && config == null then
+            error "Output directory must be specified as the `--output` argument when calling `simpleaf workflow` and/or as the `output` metadata in the config file; Cannot proceed."
+        else if config != null then
+                config
+        else
+            cmd + "/workflow_output"
     ,
 
     // internal function for adding `--output` args to simpleaf commands
@@ -133,12 +135,16 @@
                             error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % name + field_name
                         else
                             local program_name = $.get(field, "Program Name");
-                            if std.objectHas($.args, program_name) then
-                                if $.get(field, "--output", use_default=true) == null then
-                                    // doesn't need any more 
-                                    field + {"--output": output + "/" + field_name}
-                                    // field + {"--output"+: output + "/%s" % std.strReplace(field_name, "simpleaf ", "")}
-                                else
+                            local program_args = $.get($.SimpleafPrograms, program_name, use_default=true);
+                            if program_args != null then
+                                if std.objectHas(program_args, "--output") then
+                                    // make sure the program
+                                    if $.get(field, "--output", use_default=true) == null then
+                                        // doesn't need any more 
+                                        field + {"--output": output + "/" + field_name}
+                                    else
+                                        field
+                                else 
                                     field
                             else
                                 field
@@ -273,12 +279,12 @@
                         else
                             local program_name = $.get(field, "Program Name");
                             // if we see "simpleaf index" then we process it
-                            if std.objectHas($.args, program_name) then
+                            if std.objectHas($.SimpleafPrograms, program_name) then
                                 // then find the correspondence of the possible 
                                 // args in user defined outputs
                                 std.prune({   
                                     [arg_name] : $.recursive_get(field, arg_name, path)
-                                    for arg_name in std.objectFields($.get($.args, program_name))
+                                    for arg_name in std.objectFields($.get($.SimpleafPrograms, program_name))
                                 })
                                 // else we keep searching
                                 else
@@ -299,10 +305,10 @@
         local ec = "External Commands";
         local mi = "meta_info";
         // assemble the workflow
-        {[ec]: $.get(o, ec, use_default=true)} +
+        std.prune({[ec]: $.get(o, ec, use_default=true)} +
             $.flat_arg_groups($.get(o, oc, use_default=true)) + 
             $.flat_arg_groups($.get(o, rc, use_default=true)) + 
-            {[mi]: $.get(o, mi, use_default=true)}
+            {[mi]: $.get(o, mi, use_default=true)})
     ,
 
     // This function returns only the missing arguments in the 
@@ -317,7 +323,7 @@
             }
     ),
 
-    add_threads_sub(o, threads, name)::
+    add_meta_args_sub(o, threads, use_piscem, output, name)::
     {
             local field = $.get(o, field_name),
             [field_name]:
@@ -328,86 +334,97 @@
                             error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % name + field_name
                         else
                             local program_name = $.get(field, "Program Name");
-                            if std.objectHas($.args, program_name) then
-                                if $.get(field, "--threads", use_default=true) == null then
-                                    // doesn't need any more 
-                                    field + {"--threads": threads}
-                                else
-                                    field
+                            local program_args = $.get($.SimpleafPrograms, program_name, use_default=true);
+                            if program_args != null then
+                                field + std.prune({
+                                    // add threads and avoid modifying it if --threads was provided  
+                                    [if std.objectHas(program_args, "--threads") then "--threads"]:
+                                        local given_threads = $.get(field, "--threads", use_default=true);
+                                        local given_t = $.get(field, "-t", use_default=true);
+                                        if given_threads == null && given_t == null then
+                                            threads
+                                        else if given_threads != null then
+                                            given_threads
+                                        else
+                                            given_t
+                                    ,
+                                    // add output and avoid modifying it if --output was provided  
+                                    [if std.objectHas(program_args, "--output") then "--output"]:
+                                        local given_output = $.get(field, "--output", use_default=true);
+                                        local given_o = $.get(field, "-o", use_default=true);
+                                        if given_output == null && given_o == null then
+                                            output + "/" + field_name
+                                        else if given_output != null then
+                                            given_output
+                                        else
+                                            given_o
+                                    ,
+                                    // piscem
+                                    local given_piscem = $.get(field, "--use-piscem", use_default=true),
+                                    [
+                                        // if std.objectHas(program_args, "--use-piscem") &&
+                                        if program_name == "simpleaf index" &&
+                                            ( 
+                                                use_piscem ||
+                                                std.objectHas(field, "--use-piscem")
+                                            )
+                                        then
+                                            "--use-piscem"
+                                    ]: "",
+                                })
                             else
                                 field
                     else
-                        $.add_threads_sub(field, threads, name + field_name + " -> ")
+                        $.add_meta_args_sub(field, threads, use_piscem, "%s/%s" % [output, field_name], name + field_name + " -> ")
                 else
                     field
         for field_name in std.objectFields(o)
     }
     ,
 
-    add_threads(o)::
+    add_meta_args(o, output)::
         local mi = $.get(o, "meta_info", use_default=true);
         local threads = $.get(mi, "threads", use_default=true);
-        if threads == null then o
-        else {
-                local field = $.get(o, field_name),
-                [field_name]:
-                    if std.isObject(field) then
-                        // if it is a simpleaf command record, then we add --output if doesn't exist
-                        if  std.objectHas(field, "Step") then
-                            if !std.objectHas(field, "Program Name") then
-                                error "Found a command record with no 'Program Name' field in %s; Cannot proceed." % field_name
-                            else
-                                local program_name = $.get(field, "Program Name");
-                                if std.objectHas($.args, program_name) then
-                                    if $.get(field, "--threads", use_default=true) == null then
-                                        // doesn't need any more 
-                                        field + {"--threads": threads}
-                                    else
-                                        field
-                                else
-                                    field
-                        else
-                            $.add_threads_sub(field, threads, "")
-                    else
-                        field
-            for field_name in std.objectFields(o)
-        }
-    ,
+        local use_piscem = $.get(mi, "use-piscem", use_default=true, default = false);
 
+        $.add_meta_args_sub(o, threads, use_piscem, output, "") + 
+            {meta_info+: {output: output}}
+    ,
 
     // internal function for adding `--output` args to simpleaf commands
     // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
     // records
-    add_index_dir_for_simpleaf_index_quant_combo(o):: 
-        {
-            local field = $.get(o, field_name),
-            [field_name]:
-                if std.isObject(field) then
-                    // check if it has a record called `simpleaf_index`
-                    if  std.objectHas(field, "simpleaf_index") then
-                        // check if it also has simpleaf_qunt
-                        if std.objectHas(field, "simpleaf_quant") then
-                            // define variables
-                            local index = $.get(field, "simpleaf_index");
-                            local quant = $.get(field, "simpleaf_quant");
-                            local index_output = $.get(index, "--output", use_default=true);
+    add_index_dir_for_simpleaf_index_quant_combo(o)::
 
-                            // if this record doesn't have --index and --map-dir then we can add --index 
-                            if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
-                                // if the index command has a valid --output, then use it has the index in the quant 
-                                if index_output != null then
-                                    field + {"simpleaf_quant"+: {"--index": index_output+"/index"}}
-                                else
-                                    field
-                            else
-                                field
-                        else field
+        if std.isObject(o) then
+            // check if it has a record called `simpleaf_index`
+            if  std.objectHas(o, "simpleaf_index") then
+                // check if it also has simpleaf_qunt
+                if std.objectHas(o, "simpleaf_quant") then
+                    // define variables
+                    local index = $.get(o, "simpleaf_index");
+                    local quant = $.get(o, "simpleaf_quant");
+                    local index_output = $.get(index, "--output", use_default=true);
+                    local index_t2g = $.get(index, "--output", use_default=true);
+
+                    // if this record doesn't have --index and --map-dir then we can add --index 
+                    if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
+                        // if the index command has a valid --output, then use it has the index in the quant 
+                        if index_output != null then
+                            o + {"simpleaf_quant"+: {"--index": index_output+"/index"}}
+                        else
+                            o
                     else
-                        $.add_index_dir_for_simpleaf_index_quant_combo(field)
-                else
-                    field
-            for field_name in std.objectFields(o)
-        }
+                        o
+                else o
+            else
+                {
+                        local field = $.get(o, field_name),
+                        [field_name]: $.add_index_dir_for_simpleaf_index_quant_combo(field)
+                    for field_name in std.objectFields(o)
+                }
+        else
+            o
     ,
 
 
@@ -415,7 +432,7 @@
 
     // the object contains all valid arguments of simpleaf programs.
     // They all have a null value.
-    args::
+    SimpleafPrograms::
     {
         'simpleaf index': {
             // This is used for deciding by which order the commands are run
@@ -482,8 +499,6 @@
             '--map-dir': null
         },
     }
-
-
 }
 
 
