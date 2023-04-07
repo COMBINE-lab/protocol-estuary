@@ -63,8 +63,8 @@ local workflow = {
                     // gene annotation gtf file of the studied species
                     "--gtf": null,
                     // read length, usually it is "91" for 10xv3 datasets.
-                    // Please use a QUOTED number here
-                    "--rlen": null, // "--rlen": "91",
+                    // Please check the description of your experiment to make sure
+                    "--rlen": "91",
                 },
             },
 
@@ -128,6 +128,11 @@ local workflow = {
             },
         },
     },
+
+
+
+
+
 ##########################################################################################################
 // OPTIONAL : The configuration options below are optional, and may be of most interest to advanced users
 
