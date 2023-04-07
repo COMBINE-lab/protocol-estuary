@@ -362,12 +362,13 @@
                                     // piscem
                                     local given_piscem = $.get(field, "--use-piscem", use_default=true),
                                     [
-                                        if std.objectHas(program_args, "--use-piscem") &&
+                                        // if std.objectHas(program_args, "--use-piscem") &&
+                                        if program_name == "simpleaf index" &&
                                             ( 
                                                 use_piscem ||
                                                 std.objectHas(field, "--use-piscem")
                                             )
-                                        then 
+                                        then
                                             "--use-piscem"
                                     ]: "",
                                 })
@@ -390,42 +391,6 @@
             {meta_info+: {output: output}}
     ,
 
-
-    // internal function for adding `--output` args to simpleaf commands
-    // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
-    // records
-    // add_index_dir_for_simpleaf_index_quant_combo(o)::
-    //     {
-    //         local field = $.get(o, field_name),
-    //         [field_name]:
-    //             if std.isObject(field) then
-    //                 // check if it has a record called `simpleaf_index`
-    //                 if  std.objectHas(field, "simpleaf_index") then
-    //                     // check if it also has simpleaf_qunt
-    //                     if std.objectHas(field, "simpleaf_quant") then
-    //                         // define variables
-    //                         local index = $.get(field, "simpleaf_index");
-    //                         local quant = $.get(field, "simpleaf_quant");
-    //                         local index_output = $.get(index, "--output", use_default=true);
-
-    //                         // if this record doesn't have --index and --map-dir then we can add --index 
-    //                         if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
-    //                             // if the index command has a valid --output, then use it has the index in the quant 
-    //                             if index_output != null then
-    //                                 field + {"simpleaf_quant"+: {"--index": index_output+"/index"}}
-    //                             else
-    //                                 field
-    //                         else
-    //                             field
-    //                     else field
-    //                 else
-    //                     $.add_index_dir_for_simpleaf_index_quant_combo(field)
-    //             else
-    //                 field
-    //         for field_name in std.objectFields(o)
-    //     }
-    // ,
-
     // internal function for adding `--output` args to simpleaf commands
     // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
     // records
@@ -440,6 +405,7 @@
                     local index = $.get(o, "simpleaf_index");
                     local quant = $.get(o, "simpleaf_quant");
                     local index_output = $.get(index, "--output", use_default=true);
+                    local index_t2g = $.get(index, "--output", use_default=true);
 
                     // if this record doesn't have --index and --map-dir then we can add --index 
                     if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
