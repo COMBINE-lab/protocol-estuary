@@ -65,8 +65,8 @@ local workflow = {
                     // gene annotation gtf file of the studied species
                     "--gtf": null,
                     // read length, usually it is "98" for 10xv2 datasets.
-                    // Don't forget to quote the number! 
-                    "--rlen": null,
+                    // Please check the description of your experiment to make sure
+                    "--rlen": "98",
                 },
             },
 
