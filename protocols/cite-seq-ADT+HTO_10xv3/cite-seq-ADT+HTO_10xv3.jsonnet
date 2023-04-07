@@ -33,6 +33,9 @@ local workflow = {
         // If this is leaved as null, you have to specify `--output` when running `simpleaf workflow`
         "output": null, // "output": "/path/to/output",
 
+        // this meta flag says if piscem, instead of the default choice salmon, should be used for indexing and mapping for all applicable simpleaf commands.
+        "use-piscem": false, // "use-piscem": true,
+
     },
 
 #######################################################################################################################
@@ -771,16 +774,15 @@ local add_explicit_pl(o) =
         },
     };
 
-// 1. we process some fields to get required information
+// we process some fields to get required information
 local valid_output = utils.get_output(output, workflow);
 local fb_ref_path = get_fb_ref_path(workflow);
 
 local workflow1 = utils.combine_main_sections(workflow);
-local workflow2 = utils.add_outdir(workflow1, valid_output);
-local workflow3 = utils.add_threads(workflow2) + add_explicit_pl(workflow2);
+local workflow2 = utils.add_meta_args(workflow1, valid_output);
 
 // post processing. 
 // decide if running external program calls.
-local workflow4 = workflow3 + activate_ext_calls(workflow3, valid_output, fb_ref_path);
-local workflow5 = utils.add_index_dir_for_simpleaf_index_quant_combo(workflow4);
-workflow5
+local workflow3 = workflow2 + activate_ext_calls(workflow2, valid_output, fb_ref_path);
+local workflow4 = utils.add_index_dir_for_simpleaf_index_quant_combo(workflow3) + add_explicit_pl(workflow3);
+workflow4
