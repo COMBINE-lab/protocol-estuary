@@ -101,122 +101,119 @@ local workflow = {
 #########################################################################################################
 
     "Optional Configuration": {
-        // Optional arguments for processing RNA reads
-        "RNA": {
-            // Optioanal arguments for running `simpleaf index`
-            "simpleaf_index": {
-                // The required fields
-                "Step": 1,
-                "Program Name": "simpleaf index",
-                "Active": true,
+        // Optioanal arguments for running `simpleaf index`
+        "simpleaf_index": {
+            // The required fields
+            "Step": 1,
+            "Program Name": "simpleaf index",
+            "Active": true,
 
-                "Other Reference Options": {
-                    // spliced + unspliced transcriptome
-                    // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
-                    "1. spliced+unspliced (spliceu)": {
-                        // specify reference type as spliced+unspliced (spliceu)
-                        "--ref-type": null, // "--ref-type": "spliced+unspliced",
-                        // The path to the genome FASTA file
-                        "--fasta": null,
-                        // The path to the gene annotation GTF file
-                        "--gtf": null,
-                    },
-
-                    // Direct Reference
-                    // If the species doesn"t have its genome available,
-                    // you can pass the reference sequence FASTA file as `--ref-seq`.
-                    // simpleaf will build index directly using the given file 
-                    "2. Direct Reference": {
-                        // The path to the reference sequence FASTA file
-                        "--ref-seq": null,
-                    },
+            "Other Reference Options": {
+                // spliced + unspliced transcriptome
+                // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
+                "1. spliced+unspliced (spliceu)": {
+                    // specify reference type as spliced+unspliced (spliceu)
+                    "--ref-type": null, // "--ref-type": "spliced+unspliced",
+                    // The path to the genome FASTA file
+                    "--fasta": null,
+                    // The path to the gene annotation GTF file
+                    "--gtf": null,
                 },
-                
-                // If null, this argument will be automatically completed by the template.
-                "--output": null,
-                "--spliced": null,
-                "--unspliced": null,
-                "--threads": null,
-                "--dedup": null,
-                "--sparse": null,
-                "--kmer-length": null,
-                "--overwrite": null,
-                "--use-piscem": null,
-                "--minimizer-length": null,
-                "--keep-duplicates": null,
+
+                // Direct Reference
+                // If the species doesn"t have its genome available,
+                // you can pass the reference sequence FASTA file as `--ref-seq`.
+                // simpleaf will build index directly using the given file 
+                "2. Direct Reference": {
+                    // The path to the reference sequence FASTA file
+                    "--ref-seq": null,
+                },
             },
-            // arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                // The required fields first 
-                "Step": 2,
-                "Program Name": "simpleaf quant",
-                "Active": true,
+            
+            // If null, this argument will be automatically completed by the template.
+            "--output": null,
+            "--spliced": null,
+            "--unspliced": null,
+            "--threads": null,
+            "--dedup": null,
+            "--sparse": null,
+            "--kmer-length": null,
+            "--overwrite": null,
+            "--use-piscem": null,
+            "--minimizer-length": null,
+            "--keep-duplicates": null,
+        },
+        // arguments for running `simpleaf quant`
+        "simpleaf_quant": {
+            // The required fields first 
+            "Step": 2,
+            "Program Name": "simpleaf quant",
+            "Active": true,
 
-                // the transcript name to gene name mapping TSV file.
-                // Simpleaf will find the correct t2g map file for splici and spliceu reference.
-                // This is required ONLY if `--ref-seq` is specified in the corresponding simpleaf index command. 
-                "--t2g-map": null,
+            // the transcript name to gene name mapping TSV file.
+            // Simpleaf will find the correct t2g map file for splici and spliceu reference.
+            // This is required ONLY if `--ref-seq` is specified in the corresponding simpleaf index command. 
+            "--t2g-map": null,
 
-                "Other Mapping Options": {
-                    // Option 1:
-                    // If you have built the reference index already, 
-                    // you can change the Step of the simpleaf index call above to a quoted negative integer,
-                    // and specify the path to the index here  
-                    "1. Mapping Reads FASTQ Files against an existing index": {
-                        // read1 (technical reads) files separated by comma (,)
-                        "--reads1": null,
+            "Other Mapping Options": {
+                // Option 1:
+                // If you have built the reference index already, 
+                // you can change the Step of the simpleaf index call above to a quoted negative integer,
+                // and specify the path to the index here  
+                "1. Mapping Reads FASTQ Files against an existing index": {
+                    // read1 (technical reads) files separated by comma (,)
+                    "--reads1": null,
 
-                        // read2 (biological reads) files separated by comma (,)
-                        "--reads2": null,
+                    // read2 (biological reads) files separated by comma (,)
+                    "--reads2": null,
 
-                        // the path to an EXISTING salmon/piscem reference index
-                        "--index": null
-                    },
-
-                    // Option 2:
-                    // Choose only if you have an existing mapping directory and don"t want to rerun mapping
-                    "2. Existing Mapping Directory": {
-                        // the path to an existing salmon/piscem mapping result directory
-                        "--map-dir": null,
-                    },
+                    // the path to an EXISTING salmon/piscem reference index
+                    "--index": null
                 },
 
-                "Cell Filtering Options": {
-                    // No cell filtering, but correct cell barcodes according to a permitlist file
-                    // If you would like to use other cell filtering options, please change this field to null,
-                    // and select one cell filtering strategy listed in the "Optional Configuration section"
-                    // DEFAULT
-                    "--unfiltered-pl": "", // or "--unfiltered-pl": null 
-
-                    // 2. knee finding cell filtering. If choosing this, change the value from null to "".
-                    "--knee": null, // or "--knee": "",
-
-                    // 3. A hard threshold. If choosing this, change the value from null to an integer
-                    "--forced-cells": null, // or "--forced-cells": "INT", for example, "--forced-cells": "3000"
-
-                    // 4. A soft threshold. If choosing this, change the null to an integer
-                    "--expect-cells": null, //or "--expect-cells": "INT", for example, "--expect-cells": "3000"
-
-                    // 5. filter cells using an explicit whitelist. Only use when you know exactly the 
-                    // true barcodes. 
-                    // If choosing this, change the null to the path to the whitelist file. 
-                    "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
+                // Option 2:
+                // Choose only if you have an existing mapping directory and don"t want to rerun mapping
+                "2. Existing Mapping Directory": {
+                    // the path to an existing salmon/piscem mapping result directory
+                    "--map-dir": null,
                 },
-                "--chemistry": "10xv3",
-                "--resolution": "cr-like",
-                "--expected-ori": "fw",
-
-                // If null, this argument will be automatically completed by the template.
-                "--output": null,
-
-                // If "--threads" is null but the "threads" meta info field is not,
-                // "threads" meta data will be used to complete this "--threads".
-                "--threads": null,
-
-                "--min-reads": null,
-                "--use-piscem": null,
-                "--use-selective-alignment": null,
             },
+
+            "Cell Filtering Options": {
+                // No cell filtering, but correct cell barcodes according to a permitlist file
+                // If you would like to use other cell filtering options, please change this field to null,
+                // and select one cell filtering strategy listed in the "Optional Configuration section"
+                // DEFAULT
+                "--unfiltered-pl": "", // or "--unfiltered-pl": null 
+
+                // 2. knee finding cell filtering. If choosing this, change the value from null to "".
+                "--knee": null, // or "--knee": "",
+
+                // 3. A hard threshold. If choosing this, change the value from null to an integer
+                "--forced-cells": null, // or "--forced-cells": "INT", for example, "--forced-cells": "3000"
+
+                // 4. A soft threshold. If choosing this, change the null to an integer
+                "--expect-cells": null, //or "--expect-cells": "INT", for example, "--expect-cells": "3000"
+
+                // 5. filter cells using an explicit whitelist. Only use when you know exactly the 
+                // true barcodes. 
+                // If choosing this, change the null to the path to the whitelist file. 
+                "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
+            },
+            "--chemistry": "10xv3",
+            "--resolution": "cr-like",
+            "--expected-ori": "fw",
+
+            // If null, this argument will be automatically completed by the template.
+            "--output": null,
+
+            // If "--threads" is null but the "threads" meta info field is not,
+            // "threads" meta data will be used to complete this "--threads".
+            "--threads": null,
+
+            "--min-reads": null,
+            "--use-piscem": null,
+            "--use-selective-alignment": null,
         },
     },
 };

@@ -112,13 +112,15 @@
     // get the valid output dir
     // input: a top level arg called output and a user provided arg object
     
-    get_output(cmd, config):: 
-    if cmd == null && $.get(config.meta_info, "output", use_default=true) == null then
-        error "Output directory must be specified as the `--output` argument when calling `simpleaf workflow` and/or as the `output` metadata in the config file; Cannot proceed."
-    else if $.get(config.meta_info, "output", use_default=true) != null then
-            $.get(config.meta_info, "output")
-    else
-        cmd
+    get_output(cmd, o)::
+        local meta_info = $.get(o, "meta_info", use_default=true);
+        local config = $.get(meta_info, "output", use_default=true);
+        if cmd == null && config == null then
+            error "Output directory must be specified as the `--output` argument when calling `simpleaf workflow` and/or as the `output` metadata in the config file; Cannot proceed."
+        else if config != null then
+                config
+        else
+            cmd + "/workflow_output"
     ,
 
     // internal function for adding `--output` args to simpleaf commands
@@ -303,10 +305,10 @@
         local ec = "External Commands";
         local mi = "meta_info";
         // assemble the workflow
-        {[ec]: $.get(o, ec, use_default=true)} +
+        std.prune({[ec]: $.get(o, ec, use_default=true)} +
             $.flat_arg_groups($.get(o, oc, use_default=true)) + 
             $.flat_arg_groups($.get(o, rc, use_default=true)) + 
-            {[mi]: $.get(o, mi, use_default=true)}
+            {[mi]: $.get(o, mi, use_default=true)})
     ,
 
     // This function returns only the missing arguments in the 
@@ -392,36 +394,71 @@
     // internal function for adding `--output` args to simpleaf commands
     // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
     // records
-    add_index_dir_for_simpleaf_index_quant_combo(o):: 
-        {
-            local field = $.get(o, field_name),
-            [field_name]:
-                if std.isObject(field) then
-                    // check if it has a record called `simpleaf_index`
-                    if  std.objectHas(field, "simpleaf_index") then
-                        // check if it also has simpleaf_qunt
-                        if std.objectHas(field, "simpleaf_quant") then
-                            // define variables
-                            local index = $.get(field, "simpleaf_index");
-                            local quant = $.get(field, "simpleaf_quant");
-                            local index_output = $.get(index, "--output", use_default=true);
+    // add_index_dir_for_simpleaf_index_quant_combo(o)::
+    //     {
+    //         local field = $.get(o, field_name),
+    //         [field_name]:
+    //             if std.isObject(field) then
+    //                 // check if it has a record called `simpleaf_index`
+    //                 if  std.objectHas(field, "simpleaf_index") then
+    //                     // check if it also has simpleaf_qunt
+    //                     if std.objectHas(field, "simpleaf_quant") then
+    //                         // define variables
+    //                         local index = $.get(field, "simpleaf_index");
+    //                         local quant = $.get(field, "simpleaf_quant");
+    //                         local index_output = $.get(index, "--output", use_default=true);
 
-                            // if this record doesn't have --index and --map-dir then we can add --index 
-                            if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
-                                // if the index command has a valid --output, then use it has the index in the quant 
-                                if index_output != null then
-                                    field + {"simpleaf_quant"+: {"--index": index_output+"/index"}}
-                                else
-                                    field
-                            else
-                                field
-                        else field
+    //                         // if this record doesn't have --index and --map-dir then we can add --index 
+    //                         if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
+    //                             // if the index command has a valid --output, then use it has the index in the quant 
+    //                             if index_output != null then
+    //                                 field + {"simpleaf_quant"+: {"--index": index_output+"/index"}}
+    //                             else
+    //                                 field
+    //                         else
+    //                             field
+    //                     else field
+    //                 else
+    //                     $.add_index_dir_for_simpleaf_index_quant_combo(field)
+    //             else
+    //                 field
+    //         for field_name in std.objectFields(o)
+    //     }
+    // ,
+
+    // internal function for adding `--output` args to simpleaf commands
+    // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
+    // records
+    add_index_dir_for_simpleaf_index_quant_combo(o)::
+
+        if std.isObject(o) then
+            // check if it has a record called `simpleaf_index`
+            if  std.objectHas(o, "simpleaf_index") then
+                // check if it also has simpleaf_qunt
+                if std.objectHas(o, "simpleaf_quant") then
+                    // define variables
+                    local index = $.get(o, "simpleaf_index");
+                    local quant = $.get(o, "simpleaf_quant");
+                    local index_output = $.get(index, "--output", use_default=true);
+
+                    // if this record doesn't have --index and --map-dir then we can add --index 
+                    if !std.objectHas(quant, "--index") && !std.objectHas(quant, "--map-dir") then
+                        // if the index command has a valid --output, then use it has the index in the quant 
+                        if index_output != null then
+                            o + {"simpleaf_quant"+: {"--index": index_output+"/index"}}
+                        else
+                            o
                     else
-                        $.add_index_dir_for_simpleaf_index_quant_combo(field)
-                else
-                    field
-            for field_name in std.objectFields(o)
-        }
+                        o
+                else o
+            else
+                {
+                        local field = $.get(o, field_name),
+                        [field_name]: $.add_index_dir_for_simpleaf_index_quant_combo(field)
+                    for field_name in std.objectFields(o)
+                }
+        else
+            o
     ,
 
 
@@ -496,8 +533,6 @@
             '--map-dir': null
         },
     }
-
-
 }
 
 
