@@ -417,7 +417,7 @@ local workflow = {
             "Step": 5,
             "Program Name": "awk",
             "Active": true,
-            "Arguments": ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "TBD","TBD"],
+            "Arguments": ["-i inplace", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "inplace=0", "TBD","TBD"],
         },
 
         // This command is used for converting the 
@@ -508,7 +508,7 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
 
             "barcode translation"+: {
                 "Arguments": [
-                    "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", 
+                    "-i inplace", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "inplace=0", 
                     bt_file,
                     rna_quant_bc_file,
                     ">",
