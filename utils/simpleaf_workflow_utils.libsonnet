@@ -338,139 +338,60 @@
                             if program_args != null then
                                 field + std.prune({
                                     // add threads and avoid modifying it if --threads was provided  
-                                    [if std.objectHas(program_args, "--threads") then "--threads"]:
+                                    [if std.objectHas(program_args, "--threads") && threads != null then "--threads"]:
                                         local given_threads = $.get(field, "--threads", use_default=true);
-                                        local given_t = $.get(field, "-t", use_default=true);
-                                        if given_threads == null && given_t == null then
+                                        if given_threads == null then
                                             threads
-                                        else if given_threads != null then
-                                            given_threads
                                         else
-                                            given_t
+                                            given_threads
                                     ,
                                     // add output and avoid modifying it if --output was provided  
                                     [if std.objectHas(program_args, "--output") then "--output"]:
                                         local given_output = $.get(field, "--output", use_default=true);
-                                        local given_o = $.get(field, "-o", use_default=true);
-                                        if given_output == null && given_o == null then
+                                        if given_output == null then
                                             output + "/" + field_name
-                                        else if given_output != null then
-                                            given_output
                                         else
-                                            given_o
+                                            given_output
                                     ,
 
-                                    // TODO: abundon this chunk when piscem bug is fixed
-                                    // currently piscem has an bug: it will fail if setting custom kmer length.
-                                    // So, here I check if --kmer-length flag is set. 
-                                    // If it is set, then no piscem. Otherwise, we can call piscem if asked
-                                    // If this bug is fixed, then we can turn to the logics implmented below
-                                    "--use-piscem": 
-                                        // get kmer and minimizer length from workflow 
-                                        local given_kmer_length = $.get(field, "--kmer-length", use_default=true);
-                                        local given_minimizer_length = $.get(field, "--minimizer-length", use_default=true);
-                                    
-                                        // if std.objectHas(program_args, "--use-piscem") &&
-                                        if program_name == "simpleaf index" &&
-                                            ( 
-                                                use_piscem ||
-                                                std.objectHas(field, "--use-piscem")
-                                            ) && 
-                                            (
-                                                given_kmer_length == "31" ||
-                                                given_kmer_length == null
-                                            )
-                                        then
-                                            ""
-                                        else 
-                                            null
+                                    // // TODO: abundon this chunk when piscem bug is fixed
+                                    // // currently piscem has an bug: it will fail if setting custom kmer length.
+                                    // // So, here I check if --kmer-length flag is set. 
+                                    // // If it is set, then no piscem. Otherwise, we can call piscem if asked
+                                    // // If this bug is fixed, then we can turn to the logics implmented below
+                                    [
+                                        if std.objectHas(program_args, "--use-piscem") && use_piscem then 
+                                            "--use-piscem"
+                                    ]: ""
                                     ,
-
-                                    // TODO: abundon this chunk when piscem bug is fixed
-                                    // same as above
-                                    "--overwrite": 
-                                        // get kmer and minimizer length from workflow 
-                                        local given_kmer_length = $.get(field, "--kmer-length", use_default=true);
-                                        local given_minimizer_length = $.get(field, "--minimizer-length", use_default=true);
-                                    
-                                        // if std.objectHas(program_args, "--use-piscem") &&
+                                    [
                                         if program_name == "simpleaf index" &&
-                                            ( 
-                                                use_piscem ||
-                                                std.objectHas(field, "--use-piscem")
-                                            ) && 
-                                            (
-                                                given_kmer_length == "31" ||
-                                                given_kmer_length == null
-                                            )
+                                            use_piscem 
                                         then
-                                            ""
-                                        else 
-                                            null
-
-
-                                    // piscem
-                                    // TODO: switch to this when piscem bug is fixed
-                                    // It is a little bit complicated. 
-                                    // We have to make sure that if we specify a small kmer-length (< 20),
-                                    // we need to make the appropriate change for --minimizer-length
-                                    // [
-                                    //     // get kmer and minimizer length from workflow 
-                                    //     local given_kmer_length = $.get(field, "--kmer-length", use_default=true);
-                                    //     local given_minimizer_length = $.get(field, "--minimizer-length", use_default=true);
-                                    
-                                    //     if std.objectHas(program_args, "--use-piscem") &&
-                                    //     // if program_name == "simpleaf index" &&
-                                    //         ( 
-                                    //             use_piscem ||
-                                    //             std.objectHas(field, "--use-piscem")
-                                    //         ) && 
-                                    //         (
-                                    //             given_kmer_length == "31" ||
-                                    //             given_kmer_length == null
-                                    //         )
-                                    //     then
-                                    //         "--use-piscem"
-                                    // ]: "",
-
-                                    // [
-                                    //     // if std.objectHas(program_args, "--use-piscem") &&
-                                    //     if program_name == "simpleaf index" &&
-                                    //         ( 
-                                    //             use_piscem ||
-                                    //             std.objectHas(field, "--use-piscem")
-                                    //         )
-                                    //     then
-                                    //         "--overwrite"
-                                    // ]: "",
-
+                                            "--overwrite"
+                                    ]: "",
 
                                     // TODO: ask Julio if we have some simple formula to set minimizer length according to kmer length 
-                                    // TODO: uncomment this chunk if the piscem bug is fixed 
                                     // In piscem, minimizer length must be smaller than kmer length
                                     // however, salmon doesn't use minimizer, so it doesn't have this restriction
                                     // As we want to switch between salmon and piscem, when using piscem, we have to manually set minimizer length 
                                     // if the kmer-length is no larger than the default minimizer length (19).
-                                    // [
-                                    // // get kmer and minimizer length from workflow 
-                                    // local given_kmer_length = $.get(field, "--kmer-length", use_default=true);
-                                    // local given_minimizer_length = $.get(field, "--minimizer-length", use_default=true);
+                                    [
+                                    // get kmer and minimizer length from workflow 
+                                    local given_kmer_length = $.get(field, "--kmer-length", use_default=true);
+                                    local given_minimizer_length = $.get(field, "--minimizer-length", use_default=true);
                                     
-                                    // // set the criteria
-                                    // if program_name == "simpleaf index" &&
-                                    //         ( 
-                                    //             use_piscem ||
-                                    //             std.objectHas(field, "--use-piscem")
-                                    //         )
-                                    //     then
-                                    //         if given_kmer_length != null then
-                                    //             if given_minimizer_length == null then
-                                    //                 // jsonnet allow string comparison
-                                    //                 // this will work if given_kmer_length is a quoted integer
-                                    //                 if std.parseInt(given_kmer_length) < 20 then
-                                    //                     // "--minimizer-length"
-                                    //                     "--use-piscem"
-                                    // ]: "6"
+                                    // set the criteria
+                                    if program_name == "simpleaf index" && use_piscem then
+                                        if given_kmer_length != null && given_minimizer_length == null then
+                                            // default minimizer-length is 19, make sure the provided kmer-length is greater than that
+                                            if std.parseInt(given_kmer_length) < 20 then
+                                                "--minimizer-length"
+                                    ]:
+                                        // the same var defined above cannot be recognized in this scope
+                                        local given_kmer_length = $.get(field, "--kmer-length", use_default=true, default=31);
+                                        // 1.8 is used here because by using this, passing 31 here will get 19
+                                        std.toString(std.ceil(std.parseInt(given_kmer_length)/1.8)+1)
                                 })
                             else
                                 field
