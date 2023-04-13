@@ -461,7 +461,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     // check the existence of `--ref-seq`
     local adt_index_refseq = utils.get(adt, "--ref-seq", use_default = true);
     local adt_quant_t2g = utils.get(adt, "--t2g-map", use_default = true);
-    local adt_fasta_path = output_path + "/antibody_feature_reference_barcode.fasta";
     local adt_t2g_path = output_path + "/antibody_feature_t2g.tsv";
 
     local adt_fasta_path = output_path + "/antibody_feature_reference_barcode.fasta";
