@@ -112,15 +112,14 @@
     // get the valid output dir
     // input: a top level arg called output and a user provided arg object
     
-    get_output(cmd, o)::
+    get_output(o)::
         local meta_info = $.get(o, "meta_info", use_default=true);
         local config = $.get(meta_info, "output", use_default=true);
-        if cmd == null && config == null then
-            error "Output directory must be specified as the `--output` argument when calling `simpleaf workflow` and/or as the `output` metadata in the config file; Cannot proceed."
-        else if config != null then
-                config
-        else
+        if config == null then
+            local cmd = std.extVar("output");
             cmd + "/workflow_output"
+        else
+            config
     ,
 
     // internal function for adding `--output` args to simpleaf commands
@@ -346,12 +345,12 @@
                                             given_threads
                                     ,
                                     // add output and avoid modifying it if --output was provided  
-                                    [if std.objectHas(program_args, "--output") then "--output"]:
+                                    [if std.objectHas(program_args, "--output") && output != null then "--output"]:
                                         local given_output = $.get(field, "--output", use_default=true);
-                                        if given_output == null then
-                                            output + "/" + field_name
-                                        else
+                                        if given_output != null then
                                             given_output
+                                        else
+                                            output + "/" + field_name
                                     ,
 
                                     // // TODO: abundon this chunk when piscem bug is fixed
@@ -403,7 +402,8 @@
     }
     ,
 
-    add_meta_args(o, output)::
+    add_meta_args(o)::
+        local output = $.get_output(o);
         local mi = $.get(o, "meta_info", use_default=true);
         local threads = $.get(mi, "threads", use_default=true);
         local use_piscem = $.get(mi, "use-piscem", use_default=true, default = false);

@@ -230,11 +230,8 @@ local workflow = {
 local utils = std.extVar("utils");
 local output = std.extVar("output");
 
-// 1. we process some fields to get required information
-local valid_output = utils.get_output(output, workflow);
-
 local workflow1 = utils.combine_main_sections(workflow);
-local workflow2 = utils.add_meta_args(workflow1, valid_output);
+local workflow2 = utils.add_meta_args(workflow1);
 
 // post processing. 
 // decide if running external program calls.

@@ -539,7 +539,7 @@ local valid_output = utils.get_output(output, workflow);
 local fb_ref_path = get_fb_ref_path(workflow);
 
 local workflow1 = utils.combine_main_sections(workflow);
-local workflow2 = utils.add_meta_args(workflow1, valid_output);
+local workflow2 = utils.add_meta_args(workflow1);
 
 // post processing. 
 // decide if running external program calls.
