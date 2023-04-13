@@ -417,7 +417,7 @@ local workflow = {
             "Step": 5,
             "Program Name": "awk",
             "Active": true,
-            "Arguments": ["-i inplace", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "inplace=0", "TBD","TBD"],
+            "Arguments": ["-i inplace", "-v inplace::suffix='.bkp'", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "TBD","TBD"],
         },
 
         // This command is used for converting the 
@@ -508,11 +508,9 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
 
             "barcode translation"+: {
                 "Arguments": [
-                    "-i inplace", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "inplace=0", 
+                    "-i inplace", "-v inplace::suffix='.bkp'", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", 
                     bt_file,
                     rna_quant_bc_file,
-                    ">",
-                    rna_quant_bc_file
                 ],
             },
 
@@ -601,7 +599,7 @@ local valid_output = utils.get_output(output, workflow);
 local fb_ref_path = get_fb_ref_path(workflow);
 
 local workflow1 = utils.combine_main_sections(workflow);
-local workflow2 = utils.add_meta_args(workflow1, valid_output);
+local workflow2 = utils.add_meta_args(workflow1);
 
 // post processing. 
 // decide if running external program calls.
