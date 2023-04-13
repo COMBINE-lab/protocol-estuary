@@ -620,8 +620,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     local crispr_fasta_path = output_path + "/crispr_feature_reference_barcode.fasta";
     local crispr_t2g_path = output_path + "/crispr_feature_t2g.tsv";
 
-    local crispr_fasta_path = output_path + "/crispr_feature_reference_barcode.fasta";
-
     // check the existence of cell surface protein barcoding experiment
     local adt = utils.get(workflow, "antibody_capture", use_default = true);
     // check the existence of simpleaf index command
@@ -632,8 +630,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     local adt_quant_t2g = utils.get(adt, "--t2g-map", use_default = true);
     local adt_fasta_path = output_path + "/antibody_feature_reference_barcode.fasta";
     local adt_t2g_path = output_path + "/antibody_feature_t2g.tsv";
-
-    local adt_fasta_path = output_path + "/antibody_feature_reference_barcode.fasta";
 
     // get bc translation related files
     local bt_file_gz = output_path + "/3M-february-2018.txt.gz";

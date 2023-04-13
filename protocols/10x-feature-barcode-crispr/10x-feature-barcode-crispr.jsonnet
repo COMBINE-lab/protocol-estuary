@@ -59,7 +59,7 @@ local workflow = {
                 "Program Name": "simpleaf index",
 
                 // Recommeneded Reference: spliced + intronic transcriptome (splici) 
-                // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-intronic-transcriptome-reference
+                // https://pyroe.recrisprhedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-intronic-transcriptome-reference
                 // You can find other reference options in the "Optional Configuration" field. You must choose one type of reference
                 "spliced+intronic (splici) reference": {
                     // genome fasta file of the studied species
@@ -161,7 +161,7 @@ local workflow = {
 
                 "Other Reference Options": {
                     // spliced + unspliced transcriptome
-                    // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
+                    // https://pyroe.recrisprhedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
                     "1. spliced+unspliced (spliceu)": {
                         // specify reference type as spliced+unspliced (spliceu)
                         "--ref-type": null, // "--ref-type": "spliced+unspliced",
@@ -456,17 +456,15 @@ local output = std.extVar("output");
 // This function replaces the TBD place holders in external commands with the actual values.
 local activate_ext_calls(workflow, output_path, fb_ref_path) = 
     // check the existence of cell surface protein barcoding experiment
-    local adt = utils.get(workflow, "crispr_screen", use_default = true);
+    local crispr = utils.get(workflow, "crispr_screen", use_default = true);
     // check the existence of simpleaf index command
-    local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
-    local adt_quant = utils.get(adt, "simpleaf_quant", use_default = true);
+    local crispr_index = utils.get(crispr, "simpleaf_index", use_default = true);
+    local crispr_quant = utils.get(crispr, "simpleaf_quant", use_default = true);
     // check the existence of `--ref-seq`
-    local adt_index_refseq = utils.get(adt, "--ref-seq", use_default = true);
-    local adt_quant_t2g = utils.get(adt, "--t2g-map", use_default = true);
-    local adt_fasta_path = output_path + "/crispr_feature_reference_barcode.fasta";
-    local adt_t2g_path = output_path + "/crispr_feature_t2g.tsv";
-
-    local adt_fasta_path = output_path + "/crispr_feature_reference_barcode.fasta";
+    local crispr_index_refseq = utils.get(crispr, "--ref-seq", use_default = true);
+    local crispr_quant_t2g = utils.get(crispr, "--t2g-map", use_default = true);
+    local crispr_fasta_path = output_path + "/crispr_feature_reference_barcode.fasta";
+    local crispr_t2g_path = output_path + "/crispr_feature_t2g.tsv";
 
     // get bc translation related files
     local bt_file_gz = output_path + "/3M-february-2018.txt.gz";
@@ -478,14 +476,14 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
     local rna_quant_bc_file = if rna_quant_output == null then null else rna_quant_output + "/af_quant/alevin/quants_mat_rows.txt";
 
     {
-        // Update ADT ref-seq as the output of awk command
-        [if adt != null then "crispr_screen"] +: {
-            [if adt_index != null then "simpleaf_index"]+: {
-                [if adt_index_refseq == null then "--ref-seq"]: adt_fasta_path,
+        // Update crispr ref-seq as the output of awk command
+        [if crispr != null then "crispr_screen"] +: {
+            [if crispr_index != null then "simpleaf_index"]+: {
+                [if crispr_index_refseq == null then "--ref-seq"]: crispr_fasta_path,
             },
 
-            [if adt_quant != null then "simpleaf_quant"]+: {
-                [if adt_quant_t2g == null then "--t2g-map"]: adt_t2g_path,
+            [if crispr_quant != null then "simpleaf_quant"]+: {
+                [if crispr_quant_t2g == null then "--t2g-map"]: crispr_t2g_path,
             }
         },
 
@@ -520,28 +518,28 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
             "CRISPR reference CSV to t2g" +: {
-                [if adt_index_refseq != null then "Active"]: false,
+                [if crispr_index_refseq != null then "Active"]: false,
                 "Arguments": [
                     "-F",
                     "','",
                     "'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'",
-                    fb_ref_path.adt,
+                    fb_ref_path.crispr,
                     ">",
-                    adt_t2g_path],
+                    crispr_t2g_path],
             },
 
             // This command is used for converting the 
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
             "CRISPR reference CSV to FASTA" +: {
-                [if adt_index_refseq != null then "Active"]: false,
+                [if crispr_index_refseq != null then "Active"]: false,
                 "Arguments": [
                     "-F",
                     "','",
                     "'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'",
-                    fb_ref_path.adt,
+                    fb_ref_path.crispr,
                     ">",
-                    adt_fasta_path],
+                    crispr_fasta_path],
             },
         },
     };
@@ -549,14 +547,14 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
 // This function get the feature reference csv file, that will be used later
 local get_fb_ref_path(workflow) = 
     // check the existence of cell surface barcoding experiment
-    local adt = utils.get(workflow["Recommended Configuration"], "crispr_screen", use_default = true);
+    local crispr = utils.get(workflow["Recommended Configuration"], "crispr_screen", use_default = true);
     // check the existence of simpleaf index command
-    local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
+    local crispr_index = utils.get(crispr, "simpleaf_index", use_default = true);
     // check the existence of reference file
-    local adt_ref_path = utils.get(adt_index, "Feature Reference CSV", use_default = true);
+    local crispr_ref_path = utils.get(crispr_index, "Feature Reference CSV", use_default = true);
 
     {
-        "adt": adt_ref_path
+        "crispr": crispr_ref_path
     }
 ;
 
@@ -565,9 +563,9 @@ local get_fb_ref_path(workflow) =
 // This function will not return the whole object, so the returned object needs to be added to the original object.
 local add_explicit_pl(o) =
     // check the existence of cell surface protein barcoding experiment
-    local adt = utils.get(o, "crispr_screen", use_default = true);
+    local crispr = utils.get(o, "crispr_screen", use_default = true);
     // check the existence of simpleaf index command
-    local adt_quant = utils.get(adt, "simpleaf_quant", use_default = true);
+    local crispr_quant = utils.get(crispr, "simpleaf_quant", use_default = true);
 
     local rna = utils.get(o, "gene_expression", use_default = true);
     local rna_quant = utils.get(rna, "simpleaf_quant", use_default = true);
@@ -576,12 +574,12 @@ local add_explicit_pl(o) =
     {
         // assign explicit pl for CRISPR screening
         [
-            if adt_quant != null && rna_quant_bc_file != null then
-                if !std.objectHas(adt_quant, "--knee") &&
-                    !std.objectHas(adt_quant, "--explicit-pl") &&
-                    !std.objectHas(adt_quant, "--unfiltered-pl") &&
-                    !std.objectHas(adt_quant, "--forced-cells") &&
-                    !std.objectHas(adt_quant, "--expect-cells")
+            if crispr_quant != null && rna_quant_bc_file != null then
+                if !std.objectHas(crispr_quant, "--knee") &&
+                    !std.objectHas(crispr_quant, "--explicit-pl") &&
+                    !std.objectHas(crispr_quant, "--unfiltered-pl") &&
+                    !std.objectHas(crispr_quant, "--forced-cells") &&
+                    !std.objectHas(crispr_quant, "--expect-cells")
                 then
                     "crispr_screen"
                 else
