@@ -562,8 +562,8 @@ local workflow = {
 // The content below is used for parsing the config file in simpleaf internally.
 #########################################################################################################
 
-local utils = std.extVar("utils");
-local output = std.extVar("output");
+local utils = std.extVar("__utils");
+local output = std.extVar("__output");
 
 
 // 1. if the reference csv file is provided for ADT and/or HTO, then file 
