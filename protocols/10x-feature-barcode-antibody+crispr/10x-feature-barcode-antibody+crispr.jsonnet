@@ -824,7 +824,7 @@ local add_explicit_pl(o) =
     };
 
 // 1. we process some fields to get required information
-local valid_output = utils.get_output(output, workflow);
+local valid_output = utils.get_output(workflow);
 local fb_ref_path = get_fb_ref_path(workflow);
 
 local workflow1 = utils.combine_main_sections(workflow);
