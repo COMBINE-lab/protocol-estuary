@@ -460,7 +460,13 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
                     "-F",
                     "','",
                     "'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'",
-                    if std.endsWith(fb_ref_path.adt, "gz") then adt_ref_csv_path else fb_ref_path.adt,
+                        if fb_ref_path.adt != null then
+                            if std.endsWith(fb_ref_path.adt, "gz") then 
+                                adt_ref_csv_path 
+                            else 
+                                fb_ref_path.adt
+                        else
+                            adt_ref_csv_path,
                     ">",
                     adt_t2g_path],
             },
@@ -473,7 +479,13 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
                     "-F",
                     "','",
                     "'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$4}'",
-                    if std.endsWith(fb_ref_path.adt, "gz") then adt_ref_csv_path else fb_ref_path.adt,
+                        if fb_ref_path.adt != null then
+                            if std.endsWith(fb_ref_path.adt, "gz") then 
+                                adt_ref_csv_path 
+                            else 
+                                fb_ref_path.adt
+                        else
+                            adt_ref_csv_path,
                     ">",
                     adt_fasta_path],
             },
