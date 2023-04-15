@@ -620,7 +620,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
         // Add output file to awk commands.
         "External Commands" +: {
             "HTO ref gunzip" +: {
-                [if fb_ref_path.adt != null then if !std.endsWith(fb_ref_path.hto, "gz") then "Step"]: -3,
                 "Arguments": ["-c",fb_ref_path.hto,">",hto_ref_csv_path],
             },
 
@@ -629,14 +628,12 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // before building the index
 
             "ADT ref gunzip" +: {
-                [if fb_ref_path.adt != null then if !std.endsWith(fb_ref_path.adt, "gz") then "Step"]: -4,
                 "Arguments": ["-c",fb_ref_path.adt,">",adt_ref_csv_path],
             },
             // This command is used for converting the 
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
             "HTO reference CSV to t2g" +: {
-                [if hto_index_refseq != null then "Step"]: -5,
                     "Arguments": [
                         "-F",
                         "','",
@@ -651,7 +648,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
             "ADT reference CSV to t2g" +: {
-                [if adt_index_refseq != null then "Step"]: -6,
                 "Arguments": [
                     "-F",
                     "','",
@@ -665,7 +661,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
             "HTO reference CSV to FASTA" +: {
-                [if hto_index_refseq != null then "Step"]: -7,
                 "Arguments": [
                     "-F",
                     "','",
@@ -680,7 +675,6 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // reference feature barcodes' TSV file into FASTA file
             // before building the index
             "ADT reference CSV to FASTA" +: {
-                [if adt_index_refseq != null then "Step"]: -8,
                 "Arguments": [
                     "-F",
                     "','",
