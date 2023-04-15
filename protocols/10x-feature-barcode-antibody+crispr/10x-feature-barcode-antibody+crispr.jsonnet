@@ -789,7 +789,7 @@ local add_explicit_pl(o) =
                     !std.objectHas(adt_quant, "--forced-cells") &&
                     !std.objectHas(adt_quant, "--expect-cells")
                 then
-                    "crispr_screen"
+                    "antibody_capture"
                 else
                     null
             else
