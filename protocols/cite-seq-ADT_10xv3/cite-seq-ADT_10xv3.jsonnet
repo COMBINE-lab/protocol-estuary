@@ -439,7 +439,7 @@ local activate_ext_calls(workflow, output_path, fb_ref_path) =
             // before building the index
 
             "ADT ref gunzip" +: {
-                [if !std.endsWith(fb_ref_path.adt, "gz") then "Step"]: -4,
+                [if fb_ref_path.adt != null then if !std.endsWith(fb_ref_path.adt, "gz") then "Step"]: -4,
                 "Arguments": ["-c",fb_ref_path.adt,">",adt_ref_csv_path],
             },
 
