@@ -450,8 +450,8 @@ local workflow = {
 // The content below is used for parsing the config file in simpleaf internally.
 #########################################################################################################
 
-local utils = std.extVar("utils");
-local output = std.extVar("output");
+local utils = std.extVar("__utils");
+local output = std.extVar("__output");
 
 // This function replaces the TBD place holders in external commands with the actual values.
 local activate_ext_calls(workflow, output_path, fb_ref_path) = 
