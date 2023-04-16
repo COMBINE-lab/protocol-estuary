@@ -116,7 +116,7 @@
         local meta_info = $.get(o, "meta_info", use_default=true);
         local config = $.get(meta_info, "output", use_default=true);
         if config == null then
-            local cmd = std.extVar("__output");;
+            local cmd = std.extVar("__output");
             cmd + "/workflow_output"
         else
             config
