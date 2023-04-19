@@ -34,7 +34,7 @@
     // input: an object
     // output: if all args are valid, then outputs the object itself
     //          else,  return an error
-    check_invalid_args(o, name = "")::
+    check_invalid_args(o, path = "")::
     {
         local field = $.get(o, field_name),
         [field_name]: 
@@ -57,7 +57,7 @@
                                     true
                                 else
                                     error "Found invalid simpleaf %s arguments %s in %s in the provided JSON file; Cannot proceed." % 
-                                            [field_name, x, name + field_name],
+                                            [field_name, x, path + field_name],
                                 std.objectFields(field)), 
                             init=true
                         ) then 
@@ -67,9 +67,9 @@
                     else
                         field
                 else
-                    error "Found record with Step but no  Program Name: %s; Cannot proceed." % name + field_name
+                    error "Found record with Step but no  Program Name: %s; Cannot proceed." % path + field_name
             else
-                $.check_invalid_args(field,  name + field_name + " -> ")
+                $.check_invalid_args(field,  path + field_name + " -> ")
         for field_name in std.objectFields(o)
     },
 
@@ -245,7 +245,7 @@
 
     // THis is a helper funcion for flatting a nested array.
     // There must exist only one single value in all nested array 
-    flat_arr(arr, target_name, path):: 
+    flat_arr(arr, target_name, path=""):: 
     if std.length(arr) == 0 then
         null
     else if std.length(arr) > 1 then
@@ -259,7 +259,7 @@
 
     // THis function recursively get the value of a given field name.
     // The field name must appear in only once in all nested fields.
-    recursive_get(o, target_name, path)::
+    recursive_get(o, target_name, path="")::
         $.flat_arr($.recursive_search(o, target_name), target_name, path)
     ,
 
@@ -313,7 +313,7 @@
     // This function returns only the missing arguments in the 
     // Recommended Configuration section.
     // Those arguments are the essential config for å workflow
-    write_recommended_args(o):: 
+    get_recommended_args(o):: 
         $.get_missing_args(
             {
                 [field_name]: $.get(o, field_name)
