@@ -1,3 +1,7 @@
+// Simpleaf workflow utility library
+// Documentation can be found at 
+// https://simpleaf.readthedocs.io/en/latest/workflow-utility-library.html
+
 {
     // input: two boolean
     // output: logical or
