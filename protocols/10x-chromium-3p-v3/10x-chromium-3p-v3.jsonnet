@@ -19,7 +19,7 @@ local output = std.extVar("__output");# system variable, DO NOT MODIFY
 local meta_info =  {
     template_name :  "10x Chromium 3' v3 gene expression",
     template_id : "10x-chromium-3p-v3",
-    template_version : "0.0.2",
+    template_version : "0.0.3",
     
     # number of threads for all commands
     threads: null, # or threads : INT, for example, threads : 16  
@@ -34,34 +34,81 @@ local meta_info =  {
 
 # **For most users**, ONLY the information in the "recommended-config" section needs to be completed.
 # For advanced usage, please check the "advanced-config" sections.
-local recommended_config = {
-    simpleaf_index : {
-        # string path to gtf file
-        custom_ref_gtf : null,
-
-        # string path to fasta file
-        custom_ref_fasta : null,
-    },
-
+local workflow = {
+	#Information for running `simpleaf index`
+	simpleaf_index : simpleaf_index(
+		# 1 . select one of the follolwing reference type
+		utils.splici(null, null,91)
+		# utils.splici("path/to/genome.fasta", "path/to/genes.gtf", read_length)
+		# utils.spliceu("path/to/genome.fasta", "path/to/genes.gtf")
+		# utils.direct_ref("path/to/transcriptome.fasta")
+		# utils.existing_index("path/to/existing_index", "path/to/t2g_3col.tsv" | "path/to/t2g.tsv")
+		,
+		# 2. provide arguments
+		{	
+			active : true,
+			step : 1,
+			optional_arguments : {
+				"--spliced" : null,
+				"--unspliced" : null,
+				"--threads" : meta_info.threads,
+				"--dedup" : false,
+				"--sparse" : false,
+				"--use-pisem" : meta_info.use_piscem,
+				"--overwrite" : meta_info.use_piscem,
+				"--keep-duplicates" : false,
+				"--kmer-length" :  31,
+				"--minimizer-length" : utils.ml(std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+			}
+		},
+		# 3. provide output directory
+		meta_info.output + "/simpleaf_index/index"
+	),
     #Information for running `simpleaf quant`
-    simpleaf_quant : {
-        # having multiple files and they are all in a parent dir? try the following bash command to get their name (Don't forget to quote them!)
-        # $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-        # Change "*_R1_*" to the file name pattern of your files if it dosn't fit
+    simpleaf_quant : simpleaf_quant(
+		# 1. select mapping type
+		utils.map_reads(null, null, $.simpleaf_index)
+		# utils.map_reads("path/to/R1_001.fastq,path/to/R1_002.fastq", "path/to/R2_001.fastq,path/to/R2_002.fastq", $.simpleaf_index)
+		# utils.existing_mappings("path/to/existing_map_dir, path/to/t2g.tsv" | "path/to/t2g_3col.tsv")
+		,
 
-        # read1 (technical reads) files separated by comma (,)
-        reads1: null, # reads1: "path/to/file1,path/to/file2"
+		# 2. select cell filtering type
+		utils.unfiltered_pl(null)
+		# utils.unfiltered_pl("path/to/whitelist")
+		# utils.knee()
+		# utils.forced(forced_cell_nulber : int)
+		# utils.expect(expected_cell_number : int)
+		# utils.explicit_pl("path/to/whitelist")
+		,
 
-        # read2 (biological reads) files separated by comma (,)
-        reads2: null, # reads2: "path/to/file1,path/to/file2"
-    },
+		# 3. provide arguments
+		{
+			active : true,
+			step : 2,
+			optional_arguments : {
+				"--t2g-map": null,
+				"--chemistry" :  "10xv3",
+				"--resolution" :  "cr-like",
+				"--use-piscem" : meta_info.use_piscem,
+				"--expected-ori" :  "fw",
+				"--threads" :  meta_info.threads,
+				"--min-reads" : null,
+			}
+		},
+		# 4. provide output directory
+		meta_info.output + "/simpleaf_quant"
+	),
 };
 
 local advanced_config =  {
 	simpleaf_index : {
+
 		# splici, spliceu, or direct_ref
-		# if direct_ref, please fill out the corresponding field below
 		reference_type : 'splici',
+
+		ref_type : splici()
+
+
 
 		splici : {
 		"--fasta" : recommended_config.simpleaf_index.custom_ref_fasta,

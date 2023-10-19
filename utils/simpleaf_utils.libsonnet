@@ -31,6 +31,19 @@
             error "Unknown reference type: %s" % type
     ,
 
+    splici(fasta, gtf, rlen = 91) ::
+        ref_type("splici", {fasta: fasta, gtf: gtf, rlen: if rlen == null then 91 else rlen})
+    ,
+    spliceu(fasta, gtf) ::
+        ref_type("spliceu", {fasta: fasta, gtf: gtf})
+    ,
+    direct_ref(ref_seq) ::
+        ref_type("direct_ref", {ref_seq: ref_seq})
+    ,
+    existing_index(index, t2g_map) ::
+        ref_type("existing_index", {index: index, t2g_map: t2g_map})
+    ,
+
     // create a simpleaf index record
     // input: 
     // 1. the output of function ref_type,
@@ -86,6 +99,14 @@
         else
             error "Unknown mapping type: %s" % type
     ,
+
+    map_reads(reads1, reads2, simpleaf_index : {}) ::
+        map_type("map_reads", {reads1: reads1, reads2: reads2}, simpleaf_index)
+    ,
+    existing_mappings(map_dir, t2g_map) ::
+        map_type("existing_mappings", {map_dir: map_dir, t2g_map: t2g_map})
+    ,
+
     cell_filtering_type(type, argument = true) ::
         {
             type :: type,
@@ -113,6 +134,21 @@
             } 
         else
             error "Unknown cell filtering type: %s" % type
+    ,
+    unfiltered_pl(permitlist) ::
+        cell_filtering_type("unfiltered_pl", unfiltered_pl)
+    ,
+    knee() ::
+        cell_filtering_type("knee")
+    ,
+    forced_cells(permitlist) ::
+        cell_filtering_type("forced", forced_cells)
+    ,
+    expect_cells(expect_cells) ::
+        cell_filtering_type("expect", expect_cells)
+    ,
+    explicit_pl(permitlist) ::
+        cell_filtering_type("explicit_pl", explicit_pl)
     ,
 
     // create a simpleaf quant record
@@ -146,7 +182,7 @@
         else
             error "Cannot get fields from a value: '%s'. " % o
     ,
-
+    minimizer_length(klen) :: std.ceil(klen / 1.8) + 1
 
     SimpleafPrograms::
     {
