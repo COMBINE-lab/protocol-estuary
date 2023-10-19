@@ -5,603 +5,474 @@
 #############################################################################
 # README:
 
-# *IMPORTANT*: For most user, the fields in section "Recommended Configuration" are the only things to complete (replacing the nulls with your values).
+# *IMPORTANT* : For most user, the fields in section "Recommended Configuration" are the only things to complete (replacing the nulls with your values).
 
 # To modify an argument, please replace the Right hand side of each field (separated by `:`) with your value **wrapped in quotes**.
-# For example, you can replace `"output": null` in the meta_info section with `"output": "/path/to/output/dir"`, and `"threads": null` with `"threads": "16"`
+# For example, you can replace `"output" : null` in the meta_info section with `"output" : "/path/to/output/dir"`, and `"threads" : null` with `"threads" : "16"`
 
 # All fields that are null, empty array ([]), and empty dictionary ({}) will be pruned (ignored).
 
-# NOTE: You can pass optional simpleaf arguments specified in the "Optional Configuration" section.
+# NOTE : You can pass optional simpleaf arguments specified in the "Optional Configuration" section.
 
 #############################################################################
 
-local workflow = {
+# meta info for the workflow
+local meta_info =  {
+    template_name : "10x Chromium 3' Feature Barcode CRISPR (TotalSeq-B/C)",
+    template_id : "10x-feature-barcode-crispr_totalseq-b-c",
+    template_version : "0.0.2",
 
-    // Meta information
-    "meta_info": {
-        "template_name":  "10x Chromium 3' Feature Barcode Antibody (TotalSeq-B)",
-        "template_id": "10x-feature-barcode-antibody_totalseq-b",
-        "template_version": "0.0.1",
-
-        // This value will be assigned to all simpleaf commands that have no --threads arg specified
-        // Optional: commands will use their default setting if this is null.
-        "threads": null, // "threads": "16",
-
-        // The parent directory of all simpleaf command output folders.
-        // If this is leaved as null, you have to specify `--output` when running `simpleaf workflow`
-        "output": null, // "output": "/path/to/output",
-
-        // this meta flag says if piscem, instead of the default choice salmon, should be used for indexing and mapping for all applicable simpleaf commands.
-        "use-piscem": false, // "use-piscem": true,
-    },
-
-######################################################################################################################
-// *Recommended* Configuration: 
-//  For MOST users, the fields listed in the "Recommended Configuration" section are the only fields
-//  that needs to be filled. You should replace all null values with valid values, 
-//  as described in the comment lines (those start with double slashes `//`) .
-
-//  For advanced users, you can check other simpleaf arguments listed in the "Optional Configurtion" section.
-######################################################################################################################
     
-    // **For most users**, ONLY the information in the "Recommended Configuration" section needs to be completed.
-    // For advanced usage, please check the "Optional Configuration" field.
-    "Recommended Configuration": {
+    # number of threads for all commands
+    threads : 16, # or threads : INT, for example, threads : 16  
+    
+    # output directory
+    # default : `--output` arg in the command line
+    output : output, # or output : "/path/to/output/dir"
 
-        // Information needed to process gene expression reads
-        "gene_expression": {
-            // Arguments for running `simpleaf index`
-            "simpleaf_index": {
-                // these two fields are required for all command records.
-                "Step": 1,
-                "Program Name": "simpleaf index",
+    # boolean, true or false
+    use_piscem : true, # or use_piscem : false
+};
 
-                // Recommeneded Reference: spliced + intronic transcriptome (splici) 
-                // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-intronic-transcriptome-reference
-                // You can find other reference options in the "Optional Configuration" field. You must choose one type of reference
-                "spliced+intronic (splici) reference": {
-                    // genome fasta file of the studied species
-                    "--fasta": null,
-                    // gene annotation gtf file of the studied species
-                    "--gtf": null,
-                    // read length, usually it is "91" for 10xv3 datasets.
-                    // Please check the description of your experiment to make sure
-                    "--rlen": "91",
-                },
-            },
+# **For most users**, ONLY the information in the "recommended-config" section needs to be completed.
+# For advanced usage, please check the "advanced-config" sections.
+local recommended_config = {
+    gene_expression : {
+        simpleaf_index : {
+            # string path to gtf file
+            custom_ref_gtf : "genes.gtf",
 
-            // Arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                "Step": 2,
-                "Program Name": "simpleaf quant",
-                // Recommended Mapping Option: Mapping reads against the splici reference generated by the simpleaf index command above.
-                // Other mapping options can be found in the "Optional Configuration" section
-                "Recommended Mapping option": {
-                    "Mapping Reads FASTQ Files": {
-                        // read1 (technical reads) files separated by comma (,)
-                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!) 
-                        // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        // Change "*_R1_*" to the file name pattern of your files if it dosn't fit
-                        "--reads1": null,
-
-                        // read2 (biological reads) files separated by comma (,)
-                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!) 
-                        // $ find -L your/fastq/absolute/path -name "*_R2_*" -type f | sort | paste -sd, -
-                        // Change "*_R1_*" to the file name pattern of your files if it dosn't fit
-                        "--reads2": null,
-                    },
-                },
-            }
+            # string path to fasta file
+            custom_ref_fasta : "genome.fa",
         },
 
-        // This field contains all the information for analyzing antibody feature barcoding reads
-        // Only required information are listed here. 
-        // For optional arguments, Please check the "Optional Arguments" field.
-        "antibody_capture": {
-            // Arguments used for running `simpleaf index`
-            // This is required UNLESS you have an existing salmon index. In that case, you can change the Step of this "simpleaf index" command in the "Optional Configuration" to a quoted negative integer.
-            "simpleaf_index": {
-                "Step": 8,
-                "Program Name": "simpleaf index",
-                
-                // The path to the feature reference molecule structure and the corresponding reference barcode sequence.
-                // Details can be found at https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis#feature-ref 
-                "Feature Reference CSV": null,
-            },
+        #Information for running `simpleaf quant`
+        simpleaf_quant : {
+            # having multiple files and they are all in a parent dir? try the following bash command to get their name (Don't forget to quote them!)
+            # $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
+            # Change "*_R1_*" to the file name pattern of your files if it dosn't fit
 
-            // arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                "Step": 9,
-                "Program Name": "simpleaf quant",
-                // Map sequencing reads against the reference index generated by simpleaf index call
-                "Recommended Mapping Option": {
-                        // read1 (technical reads) files separated by comma (,)
-                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                        // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                        // Change "*_R1_*" to the file name pattern of your files if it dosn't fit
-                        "--reads1": null,
+            # read1 (technical reads) files separated by comma (,)
+            reads1 : "reads1.fa", # reads1 : "path/to/file1,path/to/file2"
 
-                        // read2 (biological reads) files separated by comma (,)
-                        // have all your reads in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                        // $ find -L your/fastq/absolute/path -name "*_R2_*" -type f | sort | paste -sd, -
-                        // Change "*_R1_*" to the file name pattern of your files if it dosn't fit
-                        "--reads2": null,
-                    },
-            },
+            # read2 (biological reads) files separated by comma (,)
+            reads2 : "reads2.fa", # reads2 : "path/to/file1,path/to/file2"
         },
     },
-
-
-
-
-
-##########################################################################################################
-// OPTIONAL : The configuration options below are optional, and may be of most interest to advanced users
-
-# If you want tyo skip invoking some commands, for example, when the exactly same command had been run before, 
-# you can also change their "Active" to false (the boolean, no need to quote it).
-# Simpleaf will ignore all commands with a negative “Step”. 
-# Alternatively, you can set the `--skip-step` flag when running simpleaf workflow using comma-separated step numbers.  
-
-#########################################################################################################
-
-    "Optional Configuration": {
-        // Optional arguments for processing RNA reads
-        "gene_expression": {
-            // Optioanal arguments for running `simpleaf index`
-            "simpleaf_index": {
-                // The required fields
-                "Step": 1,
-                "Program Name": "simpleaf index",
-
-                // simpleaf workflow will ignore all commands with "Active": false
-                "Active": true,
-
-                "Other Reference Options": {
-                    // spliced + unspliced transcriptome
-                    // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
-                    "1. spliced+unspliced (spliceu)": {
-                        // specify reference type as spliced+unspliced (spliceu)
-                        "--ref-type": null, // "--ref-type": "spliced+unspliced",
-                        // The path to the genome FASTA file
-                        "--fasta": null,
-                        // The path to the gene annotation GTF file
-                        "--gtf": null,
-                    },
-
-                    // Direct Reference
-                    // If the species doesn"t have its genome available,
-                    // you can pass the reference sequence FASTA file as `--ref-seq`.
-                    // simpleaf will build index directly using the given file 
-                    "2. Direct Reference": {
-                        // The path to the reference sequence FASTA file
-                        "--ref-seq": null,
-                    },
-                },
-                // If null, this argument will be automatically completed by the template.
-                "--output": null,
-                "--spliced": null,
-                "--unspliced": null,
-                "--threads": null,
-                "--dedup": null,
-                "--sparse": null,
-                "--kmer-length": null,
-                "--overwrite": null,
-                "--use-piscem": null,
-                "--minimizer-length": null,
-                "--keep-duplicates": null,
-            },
-            // arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                // The required fields first 
-                "Step": 2,
-                "Program Name": "simpleaf quant",
-
-                // simpleaf workflow will ignore all commands with "Active": false
-                "Active": true,
-
-                // the transcript name to gene name mapping TSV file.
-                // Simpleaf will find the correct t2g map file for splici and spliceu reference.
-                // This is required ONLY if `--ref-seq` is specified in the corresponding simpleaf index command. 
-                "--t2g-map": null,
-
-                "Other Mapping Options": {
-                    // Option 1:
-                    // If you have built the reference index already, 
-                    // you can change the Step of the simpleaf index call above to a quoted negative integer,
-                    // and specify the path to the index here  
-                    "1. Mapping Reads FASTQ Files against an existing index": {
-                        // read1 (technical reads) files separated by comma (,)
-                        "--reads1": null,
-
-                        // read2 (biological reads) files separated by comma (,)
-                        "--reads2": null,
-
-                        // the path to an EXISTING salmon/piscem reference index
-                        "--index": null
-                    },
-
-                    // Option 2:
-                    // Choose only if you have an existing mapping directory and don"t want to rerun mapping
-                    "2. Existing Mapping Directory": {
-                        // the path to an existing salmon/piscem mapping result directory
-                        "--map-dir": null,
-                    },
-                },
-
-                "Cell Filtering Options": {
-                    // No cell filtering, but correct cell barcodes according to a permitlist file
-                    // If you would like to use other cell filtering options, please change this field to null,
-                    // and select one cell filtering strategy listed in the "Optional Configuration section"
-                    // DEFAULT
-                    "--unfiltered-pl": "", // or "--unfiltered-pl": null 
-
-                    // 2. knee finding cell filtering. If choosing this, change the value from null to "".
-                    "--knee": null, // or "--knee": "",
-
-                    // 3. A hard threshold. If choosing this, change the value from null to an integer
-                    "--forced-cells": null, // or "--forced-cells": "INT", for example, "--forced-cells": "3000"
-
-                    // 4. A soft threshold. If choosing this, change the null to an integer
-                    "--expect-cells": null, //or "--expect-cells": "INT", for example, "--expect-cells": "3000"
-
-                    // 5. filter cells using an explicit whitelist. Only use when you know exactly the 
-                    // true barcodes. 
-                    // If choosing this, change the null to the path to the whitelist file. 
-                    "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
-                },
-                
-                "--chemistry": "10xv3",
-
-                "--resolution": "cr-like",
-                "--expected-ori": "fw",
-
-                // If null, this argument will be automatically completed by the template.
-                "--output": null,
-
-                // If "--threads" is null but the "threads" meta info field is not,
-                // "threads" meta data will be used to complete this "--threads".
-                "--threads": null,
-
-                "--min-reads": null,
-                "--use-piscem": null,
-                "--use-selective-alignment": null,
-
-            }
+    antibody_capture : {
+        simpleaf_index : {
+            # The path to the feature reference molecule structure and the corresponding reference barcode sequence.
+            # https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis#feature-ref 
+            feature_reference_csv : "feature_reference.csv", # feature_reference_csv : "/path/to/feature_reference.csv"
         },
-        "antibody_capture": {
-            // arguments used for running `simpleaf index`
-            "simpleaf_index": {
-                // The required fields first
-                "Step": 8,
-                "Program Name": "simpleaf index",
-                // simpleaf workflow will ignore all commands with "Active": false
-                "Active": true,
-
-                // The path to the reference sequence FASTA file
-                // Only change this if the tag barcode reference file is in the FASTA format
-                "--ref-seq": null,
-
-                "--kmer-length": "7",
-                "--output": null,
-                "--threads": null,
-                "--sparse": null,
-                "--overwrite": null,
-                "--use-piscem": null,
-                "--minimizer-length": null,
-                "--keep-duplicates": null,
-            },
-
-            // Optional arguments for running `simpleaf quant`
-            "simpleaf_quant": {
-                // The Step of this experiment
-                "Step": 9,
-                "Program Name": "simpleaf quant",
-                // simpleaf workflow will ignore all commands with "Active": false
-                "Active": true,
-
-                // the transcript name to gene name mapping TSV file
-                // This is required if `--ref-seq` is specified in the corresponding simpleaf index command. 
-                "--t2g-map": null,
-
-                "Other Mapping Options": {
-                    // Option 1:
-                    // If you have built the reference index already, 
-                    // you can leave the simpleaf index section unchanged
-                    // and specify the path to the index here  
-                    "1. Mapping Reads FASTQ Files against an existing index": {
-                        // read1 (technical reads) files separated by comma (,)
-                        "--reads1": null,
-
-                        // read2 (biological reads) files separated by comma (,)
-                        "--reads2": null,
-
-                        // the path to an existing salmon/piscem reference index
-                        "--index": null
-                    },
-
-                    // Option 2:
-                    // Choose only if you have an existing mapping directory and don"t want to rerun mapping
-                    "2. Existing Mapping Directory": {
-                        // the path to an existing salmon/piscem mapping result directory
-                        "--map-dir": null,
-                    },
-                },
-
-                // By default, the workflow will use the reported cell barcodes in the gene count matrix
-                // obtained from processing RNA reads as the explicit permit list for feature barcoding reads.
-                // If you want to choose another cell fitlering option, please specify one of the followings.
-                "Other Cell Filtering Options": {
-                    // 1. No cell filtering, but correct cell barcodes according to a permitlist file
-                    //    if you don"t want to use this, change the value from "" to null. 
-                    // *RECOMMENDED*
-                    "--unfiltered-pl": null, // or "--unfiltered-pl": "" 
-
-                    // 2. knee finding cell filtering. If choosing this, change the value from null to "".
-                    "--knee": null, // or "--knee": null,
-
-                    // 3. A hard threshold. If choosing this, change the value from null to an integer
-                    "--forced-cells": null, // or "--forced-cells": "INT", for example, "--forced-cells": "3000"
-
-                    // 4. A soft threshold. If choosing this, change the null to an integer
-                    "--expect-cells": null, //or "--expect-cells": "INT", for example, "--expect-cells": "3000"
-
-                    // 5. filter cells using an explicit whitelist. Only use when you know exactly the 
-                    // true barcodes. 
-                    // If choosing this, change the null to the path to the whitelist file. 
-                    "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
-                },
-                "--chemistry": "1{b[16]u[12]}2{x[10]r[15]x:}",
-                "--resolution": "cr-like",
-                "--expected-ori": "fw",
-
-                // If null, this argument will be automatically completed by the template.
-                "--output": null,
-                "--threads": null,
-                "--min-reads": null,
-                "--index": null,
-                "--use-piscem": null,
-                "--use-selective-alignment": null,
-            },
+        simpleaf_quant : {
+            reads1 : "reads1.fa", # reads1 : "path/to/file1,path/to/file2"
+            reads2 : "reads2.fa", # reads2 : "path/to/file1,path/to/file2"
         },
     },
-
-##########################################################################################################
-// External Commands: The external linux commands that will be run during the execution of the workflow
-// README:
-// This section records the shell commands that will be called during the execution of the workflow.
-// Each subfield should have an unique name and contain the complete information for involing a linux command.
-// All shell command fields should match the following format:
-//      1. There should be a "Program Name" field that records the path to the program. 
-//          For programs in your PATH env varible, for example, `awk`, this can just be the program name.
-//          For local programs, you need to specify the path to the executable of that program, for example, 
-//          if you have a local compile of bedtools, you need to say "path/to/bedtools"
-//      2. There should be a "Step" field that indicates the Step of the command. 
-//          Commands with a negative "Step" will be ignored by simpleaf and will not be executed. 
-//          Simpleaf workflow will sort all simpleaf commands and external program commands defined in a workflow
-//          by their Step to decide the final Step. 
-//      3. All rest fields should be named by a quoted integer, for example, "1", "15". 
-//          The number indicates the order of the argument in the complete command.
-//          Simpleaf will sort the numbers and complete the program call using that order.
-//          For example, 
-//              {
-//               "Program Name": "ls",
-//               "Step": 1,
-//               "Arguments": ["-lh", "/path/to/dir"]
-//              }
-//          will be interpreted as `ls -lh /path/to/dir` and will be executed 
-//          before any (simpleaf or external program) commands with an Step larger than 1.
-#########################################################################################################
-
-
-    "External Commands": {
-        // This function download barcode translation from cell ranger github repo
-        "barcode translation file fetch": {
-            "Step": 3,
-            "Program Name": "wget",
-            "Active": true,
-            "Arguments": ["-O","TBD", "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz"],
+    crispr_screen : {
+        simpleaf_index : {
+            # same format as in antibody_capture but for crispr screen
+            feature_reference_csv : "feature_reference.csv", # feature_reference_csv : "/path/to/feature_reference.csv"
         },
 
-        // This file gunzip downloaded barcode translation file
-        "barcode translation file gunzip": {
-            "Step": 4,
-            "Program Name": "gunzip",
-            "Active": true,
-            "Arguments": ["-c","TBD",">","TBD"],
-        },
-
-        // Translate RNA barcode to feature barcode
-        "barcode translation": {
-            "Step": 5,
-            "Program Name": "awk",
-            "Active": true,
-            "Arguments": ["-i inplace", "-v inplace::suffix='.bkp'", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", "TBD","TBD"],
-        },
-
-        // This command is used for converting the 
-        // reference feature barcodes' TSV file into FASTA file
-        // before building the index
-        "Antibody reference CSV to t2g": {
-            "Step": 6,
-            "Program Name": "awk",
-            "Active": true,
-            "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'","TBD",">","TBD"],
-        },
-        
-        // This command is used for converting the 
-        // reference feature barcodes' TSV file into FASTA file
-        // before building the index
-        "Antibody reference CSV to FASTA": {
-            "Step": 7,
-            "Program Name": "awk",
-            "Active": true,
-
-            "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'","TBD",">","TBD"]
+        simpleaf_quant : {
+            reads1 : "reads1.fa", # reads1 : "path/to/file1,path/to/file2"
+            reads2 : "reads2.fa", # reads2 : "path/to/file1,path/to/file2"
         },
     },
 };
 
-##########################################################################################################
-// PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
-// The content below is used for parsing the config file in simpleaf internally.
-#########################################################################################################
+local advanced_config = {
+    gene_expression : {
+        simpleaf_index : {
+            # splici, spliceu, or direct_ref
+            # if direct_ref, please fill out the corresponding field below
+            reference_type : 'splici',
 
-local utils = std.extVar("__utils");
-local output = std.extVar("__output");
-
-// This function replaces the TBD place holders in external commands with the actual values.
-local activate_ext_calls(workflow, output_path, fb_ref_path) = 
-    // check the existence of cell surface protein barcoding experiment
-    local adt = utils.get(workflow, "antibody_capture", use_default = true);
-    // check the existence of simpleaf index command
-    local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
-    local adt_quant = utils.get(adt, "simpleaf_quant", use_default = true);
-    // check the existence of `--ref-seq`
-    local adt_index_refseq = utils.get(adt, "--ref-seq", use_default = true);
-    local adt_quant_t2g = utils.get(adt, "--t2g-map", use_default = true);
-    local adt_t2g_path = output_path + "/antibody_feature_t2g.tsv";
-
-    local adt_fasta_path = output_path + "/antibody_feature_reference_barcode.fasta";
-
-    // get bc translation related files
-    local bt_file_gz = output_path + "/3M-february-2018.txt.gz";
-    local bt_file = output_path + "/3M-february-2018.txt";
-
-    local rna = utils.get(workflow, "gene_expression", use_default = true);
-    local rna_quant = utils.get(rna, "simpleaf_quant", use_default = true);
-    local rna_quant_output = utils.get(rna_quant, "--output", use_default = true);
-    local rna_quant_bc_file = if rna_quant_output == null then null else rna_quant_output + "/af_quant/alevin/quants_mat_rows.txt";
-
-    {
-        // Update ADT ref-seq as the output of awk command
-        [if adt != null then "antibody_capture"] +: {
-            [if adt_index != null then "simpleaf_index"]+: {
-                [if adt_index_refseq == null then "--ref-seq"]: adt_fasta_path,
+            splici : {
+            "--fasta" : recommended_config.gene_expression.simpleaf_index.custom_ref_fasta,
+            "--gtf" : recommended_config.gene_expression.simpleaf_index.custom_ref_gtf,
+            "--rlen" : 91,
             },
 
-            [if adt_quant != null then "simpleaf_quant"]+: {
-                [if adt_quant_t2g == null then "--t2g-map"]: adt_t2g_path,
-            }
-        },
-
-        // Add output file to awk commands.
-        "External Commands" +: {
-            "barcode translation file fetch"+: {
-                "Arguments": [
-                    "-O",
-                    bt_file_gz, 
-                    "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz"],
+            spliceu : {
+                # spliced + unspliced transcriptome
+                # https : //pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
+                "--ref-type" : "spliceu",
+                "--fasta" :  recommended_config.gene_expression.simpleaf_index.custom_ref_fasta,
+                "--gtf" :  recommended_config.gene_expression.simpleaf_index.custom_ref_gtf,
             },
 
-            // This file gunzip downloaded barcode translation file
-            "barcode translation file gunzip"+: {
-                "Arguments": [
-                    "-c",
-                    bt_file_gz,
-                    ">",
-                    bt_file
-                ],
-            },
-
-            "barcode translation"+: {
-                "Arguments": [
-                    "-i inplace", "-v inplace::suffix='.bkp'", "'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", 
-                    bt_file,
-                    rna_quant_bc_file,
-                ],
-            },
-
-            // This command is used for converting the 
-            // reference feature barcodes' TSV file into FASTA file
-            // before building the index
-            "Antibody reference CSV to t2g" +: {
-                [if adt_index_refseq != null then "Active"]: false,
-                "Arguments": [
-                    "-F",
-                    "','",
-                    "'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'",
-                    fb_ref_path.adt,
-                    ">",
-                    adt_t2g_path],
-            },
-
-            // This command is used for converting the 
-            // reference feature barcodes' TSV file into FASTA file
-            // before building the index
-            "Antibody reference CSV to FASTA" +: {
-                [if adt_index_refseq != null then "Active"]: false,
-                "Arguments": [
-                    "-F",
-                    "','",
-                    "'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'",
-                    fb_ref_path.adt,
-                    ">",
-                    adt_fasta_path],
+            direct_ref : {
+                "--ref-seq" :  null,
             },
         },
-    };
 
-// This function get the feature reference csv file, that will be used later
-local get_fb_ref_path(workflow) = 
-    // check the existence of cell surface barcoding experiment
-    local adt = utils.get(workflow["Recommended Configuration"], "antibody_capture", use_default = true);
-    // check the existence of simpleaf index command
-    local adt_index = utils.get(adt, "simpleaf_index", use_default = true);
-    // check the existence of reference file
-    local adt_ref_path = utils.get(adt_index, "Feature Reference CSV", use_default = true);
-
-    {
-        "adt": adt_ref_path
-    }
-;
-
-// This function assigns the cell barcde list (rownames) reporeted in the gene expression count matrix
-// generated using RNA reads as the explicit permitlist for surface protein reads.
-// This function will not return the whole object, so the returned object needs to be added to the original object.
-local add_explicit_pl(o) =
-    // check the existence of cell surface protein barcoding experiment
-    local adt = utils.get(o, "antibody_capture", use_default = true);
-    // check the existence of simpleaf index command
-    local adt_quant = utils.get(adt, "simpleaf_quant", use_default = true);
-
-    local rna = utils.get(o, "gene_expression", use_default = true);
-    local rna_quant = utils.get(rna, "simpleaf_quant", use_default = true);
-    local rna_quant_output = utils.get(rna_quant, "--output", use_default = true);
-    local rna_quant_bc_file = if rna_quant_output == null then null else rna_quant_output + "/af_quant/alevin/quants_mat_rows.txt";
-    {
-        // assign explicit pl for antibody capturing 
-        [
-            if adt_quant != null && rna_quant_bc_file != null then
-                if !std.objectHas(adt_quant, "--knee") &&
-                    !std.objectHas(adt_quant, "--explicit-pl") &&
-                    !std.objectHas(adt_quant, "--unfiltered-pl") &&
-                    !std.objectHas(adt_quant, "--forced-cells") &&
-                    !std.objectHas(adt_quant, "--expect-cells")
-                then
-                    "antibody_capture"
-                else
-                    null
-            else
-                null
-        ]+: 
-        {
-            "simpleaf_quant"+: {
-                "--explicit-pl": rna_quant_bc_file
-            }
+        # if you have an existing index, please fill out the corresponding field below.
+        # This will skip the index building step and use the existing index.
+        existing_index : {
+            enabled : false, # switch to true if you have an existing index
+            index_path : null,
+            t2g_map_path : null,
         },
-    };
 
-// we process some fields to get required information
-local valid_output = utils.get_output(workflow);
-local fb_ref_path = get_fb_ref_path(workflow);
+        simpleaf_quant : {
+            # map_reads or existing_mappings
+            # if existing_mappings, please fill out the corresponding field below
+            map_type : "map_reads",
 
-local workflow1 = utils.combine_main_sections(workflow);
-local workflow2 = utils.add_meta_args(workflow1);
+            # Option 2 : 
+            # Choose only if you have an existing mapping directory and don"t want to rerun mapping
+            existing_mappings : {
+                # the path to an existing salmon/piscem mapping result directory
+                "--map-dir" : null,
+            },
 
-// post processing. 
-// decide if running external program calls.
-local workflow3 = workflow2 + activate_ext_calls(workflow2, valid_output, fb_ref_path);
-local workflow4 = utils.add_index_dir_for_simpleaf_index_quant_combo(workflow3) + add_explicit_pl(workflow3);
-workflow4
+            # Recommended Mapping Option :  Mapping reads against the splici reference generated by the simpleaf index command above.
+            map_reads : {
+                "--index" : if advanced_config.gene_expression.existing_index.enabled then advanced_config.gene_expression.existing_index.index_path else meta_info.output + "/simpleaf_index/index",
+                "--reads1" : recommended_config.gene_expression.simpleaf_quant.reads1,
+                "--reads2" : recommended_config.gene_expression.simpleaf_quant.reads2,
+            },
+            
+            # five options, 1. (DEFAUT) unfiltered_pl, 2. knee, 3. forced, 4. expect, 5. explicit_pl
+            # please fill out the corresponding field below
+            cell_filtering_type : "unfiltered_pl",
+
+            # No cell filtering, but correct cell barcodes according to a permitlist file
+            # If you would like to use other cell filtering options, please change this field to null,
+            # and select one cell filtering strategy listed in the "advanced-config" section
+            # DEFAULT
+            unfiltered_pl : {
+                # empty string means using 10X whitelist.
+                # Provide a path if you want to use a different whitelist.
+                "--unfiltered-pl" :  "", 
+            },
+
+            # 2. knee finding cell filtering. If choosing this, change the value from null to "".
+            knee : {
+                "--knee" :  true, # false or true,
+            },
+
+            # 3. A hard threshold. If choosing this, change the value from null to an integer
+            forced : {
+                "--forced-cells" :  null, # or "--forced-cells" : INT, for example, "--forced-cells" : 3000
+            },
+
+            # 4. A soft threshold. If choosing this, change the null to an integer
+            expect : {
+                "--expect-cells" :  null, #or "--expect-cells" : INT, for example, "--expect-cells" : 3000
+            },
+
+            # 5. filter cells using an explicit whitelist. Only use when you know exactly the 
+            # true barcodes. 
+            # If choosing this, change the null to the path to the whitelist file. 
+            explicit_pl : {
+                "--explicit-pl" : null, # or "--explicit-pl" : "/path/to/pl",
+            },
+        },
+    },
+    antibody_capture : {
+        existing_index : {
+            enabled : false, # switch to true if you have an existing index
+            index_path : null,
+            t2g_map_path : null,
+        },
+        
+        simpleaf_quant : {
+            # map_reads or existing_mappings
+            # if existing_mappings, please fill out the corresponding field below
+            map_type : "map_reads",
+
+            # Option 2 : 
+            # Choose only if you have an existing mapping directory and don"t want to rerun mapping
+            existing_mappings :  {
+                # the path to an existing salmon/piscem mapping result directory
+                "--map-dir" :  null,
+            },
+
+            # Recommended Mapping Option :  Mapping reads against the splici reference generated by the simpleaf index command above.
+            map_reads : {
+                "--index" : if advanced_config.antibody_capture.existing_index.enabled then advanced_config.antibody_capture.existing_index.index_path else meta_info.output + "/antibody_capture/simpleaf_index/index",
+                "--reads1" : recommended_config.antibody_capture.simpleaf_quant.reads1,
+                "--reads2" : recommended_config.antibody_capture.simpleaf_quant.reads2,
+            },  
+
+            # five options, 1. explicit_pl, 2. knee, 3. forced, 4. expect, 5. unfiltered_pl
+            # please fill out the corresponding field below
+            cell_filtering_type : "explicit_pl",
+
+            # filter cells using an explicit whitelist. Only use when you know exactly the 
+            # true barcodes. 
+            # DEFAULT
+            explicit_pl : {
+            "--explicit-pl" : meta_info.output + "/gene_expression/simpleaf_index/af_quant/alevin/quants_mat_rows.txt"
+            },
+
+            # 2. knee finding cell filtering. If choosing this, change the value from null to "".
+            knee : {
+            "--knee" :  true, # false or true,
+            },
+
+            # 3. A hard threshold. If choosing this, change the value from null to an integer
+            forced : {
+            "--forced-cells" :  null, # or "--forced-cells" : INT, for example, "--forced-cells" : 3000
+            },
+
+            # 4. A soft threshold. If choosing this, change the null to an integer
+            expect : {
+            "--expect-cells" :  null, #or "--expect-cells" : INT, for example, "--expect-cells" : 3000
+            },
+
+            # 5. No cell filtering, but correct cell barcodes according to a permitlist file
+            # If you would like to use other cell filtering options, please change this field to null,
+            # and select one cell filtering strategy listed in the "advanced-config" section
+            unfiltered_pl : {
+            # empty string means using 10X whitelist.
+            # Provide a path if you want to use a different whitelist.
+            "--unfiltered-pl" :  null, 
+            },
+        },  
+    },
+    crispr_screen : {
+        existing_index : {
+            enabled : false, # switch to true if you have an existing index
+            index_path : null,
+            t2g_map_path : null,
+        },
+        
+        simpleaf_quant : {
+            # map_reads or existing_mappings
+            # if existing_mappings, please fill out the corresponding field below
+            map_type : "map_reads",
+
+            # Option 2 : 
+            # Choose only if you have an existing mapping directory and don"t want to rerun mapping
+            existing_mappings :  {
+                # the path to an existing salmon/piscem mapping result directory
+                "--map-dir" :  null,
+            },
+
+            # Recommended Mapping Option :  Mapping reads against the splici reference generated by the simpleaf index command above.
+            map_reads : {
+                "--index" : if advanced_config.crispr_screen.existing_index.enabled then advanced_config.crispr_screen.existing_index.index_path else meta_info.output + "/crispr_screen/simpleaf_index/index",
+                "--reads1" : recommended_config.crispr_screen.simpleaf_quant.reads1,
+                "--reads2" : recommended_config.crispr_screen.simpleaf_quant.reads2,
+            },  
+            # five options, 1. explicit_pl, 2. knee, 3. forced, 4. expect, 5. unfiltered_pl
+            # please fill out the corresponding field below
+            cell_filtering_type : "explicit_pl",
+
+            # filter cells using an explicit whitelist. Only use when you know exactly the 
+            # true barcodes. 
+            # DEFAULT
+            explicit_pl : {
+            "--explicit-pl" : meta_info.output + "/gene_expression/simpleaf_index/af_quant/alevin/quants_mat_rows.txt"
+            },
+
+            # 2. knee finding cell filtering. If choosing this, change the value from null to "".
+            knee : {
+            "--knee" :  true, # false or true,
+            },
+
+            # 3. A hard threshold. If choosing this, change the value from null to an integer
+            forced : {
+            "--forced-cells" :  null, # or "--forced-cells" : INT, for example, "--forced-cells" : 3000
+            },
+
+            # 4. A soft threshold. If choosing this, change the null to an integer
+            expect : {
+            "--expect-cells" :  null, #or "--expect-cells" : INT, for example, "--expect-cells" : 3000
+            },
+
+            # 5. No cell filtering, but correct cell barcodes according to a permitlist file
+            # If you would like to use other cell filtering options, please change this field to null,
+            # and select one cell filtering strategy listed in the "advanced-config" section
+            unfiltered_pl : {
+            # empty string means using 10X whitelist.
+            # Provide a path if you want to use a different whitelist.
+            "--unfiltered-pl" :  null, 
+            },
+        },  
+    },
+};
+
+local optional_config = {
+    gene_expression : {
+        simpleaf_index : {
+            active : ! (advanced_config.gene_expression.existing_index.enabled || advanced_config.gene_expression.simpleaf_quant.map_type == "existing_mappings"),
+            step : 1,
+            "program-name" : "simpleaf index",
+            "--output" :  meta_info.output + "/gene_expression/simpleaf_index",
+            "--spliced" : null,
+            "--unspliced" : null,
+            "--threads" : meta_info.threads,
+            "--dedup" : false,
+            "--sparse" : false,
+            "--use-pisem" : meta_info.use_piscem,
+            "--overwrite" : meta_info.use_piscem,
+            "--keep-duplicates" : false,
+            "--kmer-length" :  31,
+            "--minimizer-length" : if meta_info.use_piscem then std.ceil(std.get(self, "--kmer-length") / 1.8) + 1 else null,
+        },
+        simpleaf_quant : {
+            active : true,
+            step : 2,
+            "program-name" : "simpleaf quant",
+            "--t2g-map" : if advanced_config.gene_expression.existing_index.enabled then advanced_config.existing_index.gene_expression.t2g_map_path else null,
+            "--chemistry" :  "10xv3",
+            "--resolution" :  "cr-like",
+            "--use-piscem" : meta_info.use_piscem,
+            "--expected-ori" :  "fw",
+            "--output" : meta_info.output + "/gene_expression/simpleaf_quant",
+            "--threads" :  meta_info.threads,
+            "--min-reads" : null,
+        },
+    },
+    antibody_capture : {
+        simpleaf_index : {
+            active : ! (advanced_config.antibody_capture.existing_index.enabled || advanced_config.antibody_capture.simpleaf_quant.map_type == "existing_mappings"),
+            step : 11,
+            "program-name" : "simpleaf index",
+            "--ref-seq" : meta_info.output + "/.antibody_ref_barcode.fa",
+            "--output" :  meta_info.output + "/antibody_capture/simpleaf_index",
+            "--threads" : meta_info.threads,
+            "--sparse" : false,
+            "--use-pisem" : meta_info.use_piscem,
+            "--overwrite" : meta_info.use_piscem,
+            "--keep-duplicates" : false,
+            "--kmer-length" : 7,
+            "--minimizer-length" : if meta_info.use_piscem then std.ceil(std.get(self, "--kmer-length") / 1.8) + 1 else null,
+        },
+        simpleaf_quant : {
+            active : true,
+            step : 12,
+            "program-name" : "simpleaf quant",
+            "--t2g-map" : if advanced_config.antibody_capture.existing_index.enabled then advanced_config.antibody_capture.existing_index.t2g_map_path else meta_info.output + "/.antibody_ref_t2g.tsv",
+            "--chemistry" :  "1{b[16]u[12]}2{x[10]r[15]x:}",
+            "--resolution" :  "cr-like",
+            "--use-piscem" : meta_info.use_piscem,
+            "--expected-ori" :  "fw",
+            "--output" : meta_info.output + "/antibody_capture/simpleaf_quant",
+            "--threads" :  meta_info.threads,
+            "--min-reads" : null,
+        },
+    },
+    crispr_screen : {
+        simpleaf_index : {
+            active : ! (advanced_config.antibody_capture.existing_index.enabled || advanced_config.antibody_capture.simpleaf_quant.map_type == "existing_mappings"),
+            step : 13,
+            "program-name" : "simpleaf index",
+            "--ref-seq" : meta_info.output + "/.crispr_ref_barcode.fa",
+            "--output" :  meta_info.output + "/gene_expression/simpleaf_index",
+            "--threads" : meta_info.threads,
+            "--dedup" : false,
+            "--sparse" : false,
+            "--use-pisem" : meta_info.use_piscem,
+            "--overwrite" : meta_info.use_piscem,
+            "--keep-duplicates" : false,
+            "--kmer-length" :  7,
+            "--minimizer-length" : if meta_info.use_piscem then std.ceil(std.get(self, "--kmer-length") / 1.8) + 1 else null,
+        },
+        simpleaf_quant : {
+            active : true,
+            step : 14,
+            "program-name" : "simpleaf quant",
+            "--t2g-map" : if advanced_config.existing_index.enabled then advanced_config.existing_index.t2g_map_path else meta_info.output + "/.crispr_ref_t2g.tsv",
+            "--chemistry" :  "1{b[16]u[12]}2{x:r[20]f[GTTTAAGAGCTAAGCTGGAA]x:}",
+            "--resolution" :  "cr-like",
+            "--use-piscem" : meta_info.use_piscem,
+            "--expected-ori" :  "fw",
+            "--output" : meta_info.output + "/gene_expression/simpleaf_quant",
+            "--threads" :  meta_info.threads,
+            "--min-reads" : null,
+        },
+    },
+};
+
+local external_commands = {
+    fetch_cb_translation_file : {
+        active : true,
+        step : 3,
+        "program-name" : "wget",
+        "Arguments": ["-O", meta_info.output + "/.3M-february-2018.txt.gz", "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz"],
+    },
+    unzip_cb_translation_file : {
+        active : true,
+        step : 4,
+        "program-name" : "gunzip",
+        "Arguments": ["-c", meta_info.output + "/.3M-february-2018.txt.gz",">", meta_info.output + "/.3M-february-2018.txt"],
+    },
+
+    backup_bc_file : {
+        active : true,
+        step: 5,
+        "program-name": "mv",
+        "Arguments": [meta_info.output + "/gene_expression/simpleaf_index/af_quant/alevin/quants_mat_rows.txt", meta_info.output + "/gene_expression/simpleaf_index/af_quant/alevin/.quants_mat_rows.txt.bkp"],
+    },
+
+    // Translate RNA barcode to feature barcode
+    barcode_translation : {
+        active : true,
+        step: 6,
+        "program-name": "awk",
+        "Arguments": ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", meta_info.output + "/.3M-february-2018.txt", meta_info.output + "/gene_expression/simpleaf_index/af_quant/alevin/.quants_mat_rows.txt.bkp", ">", meta_info.output + "/gene_expression/simpleaf_index/af_quant/alevin/quants_mat_rows.txt"],
+    },
+
+    create_antibody_t2g : {
+        active : ! (advanced_config.antibody_capture.existing_index.enabled || advanced_config.antibody_capture.simpleaf_quant.map_type == "existing_mappings"),
+        step: 7,
+        "program-name": "awk",
+        "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", recommended_config.antibody_capture.simpleaf_index.feature_reference_csv, ">", meta_info.output + "/.antibody_ref_t2g.tsv"],
+    },
+    
+    create_antibody_fasta: {
+        active : ! (advanced_config.antibody_capture.existing_index.enabled || advanced_config.antibody_capture.simpleaf_quant.map_type == "existing_mappings"),
+        step: 8,
+        "program-name": "awk",
+        "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", recommended_config.antibody_capture.simpleaf_index.feature_reference_csv, ">", meta_info.output + "/.antibody_ref.fa"]
+    },
+
+    create_crispr_t2g : {
+        active : ! (advanced_config.antibody_capture.existing_index.enabled || advanced_config.antibody_capture.simpleaf_quant.map_type == "existing_mappings"),
+        step: 9,
+        "program-name": "awk",
+        "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", recommended_config.crispr_screen.simpleaf_index.feature_reference_csv, ">", meta_info.output + "/.crispr_ref_t2g.tsv"],
+    },
+    
+    create_crispr_fasta: {
+        active : ! (advanced_config.antibody_capture.existing_index.enabled || advanced_config.antibody_capture.simpleaf_quant.map_type == "existing_mappings"),
+        step: 10,
+        "program-name": "awk",
+        "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", recommended_config.crispr_screen.simpleaf_index.feature_reference_csv, ">", meta_info.output + "/.crispr_ref_barcode.fa"]
+    },
+};
+
+# build gene expression modality
+local gene_expression = {
+    simpleaf_index : optional_config.gene_expression.simpleaf_index + 
+	    utils.get_field(advanced_config.gene_expression.simpleaf_index, advanced_config.gene_expression.simpleaf_index.reference_type),
+
+    simpleaf_quant : optional_config.gene_expression.simpleaf_quant +
+	    utils.get_field(advanced_config.gene_expression.simpleaf_quant, advanced_config.gene_expression.simpleaf_quant.map_type) +
+	    utils.get_field(advanced_config.gene_expression.simpleaf_quant, advanced_config.gene_expression.simpleaf_quant.cell_filtering_type),
+};
+
+local antibody_capture = {
+    simpleaf_index : optional_config.antibody_capture.simpleaf_index,
+    simpleaf_quant : optional_config.antibody_capture.simpleaf_quant + 
+        utils.get_field(advanced_config.antibody_capture.simpleaf_quant, advanced_config.antibody_capture.simpleaf_quant.map_type) + 
+        utils.get_field(advanced_config.antibody_capture.simpleaf_quant, advanced_config.antibody_capture.simpleaf_quant.cell_filtering_type),
+}
+
+
+====================================
+
+std.prune({
+	"meta-info" : meta_info,
+	workflow : {
+		simpleaf_index : simpleaf_index,
+		simpleaf_quant : simpleaf_quant,
+	}
+})
