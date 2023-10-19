@@ -3,6 +3,12 @@
 // https://simpleaf.readthedocs.io/en/latest/workflow-utility-library.html
 
 {
+    get_field(o,f) ::
+      if std.member(std.objectValues(std.get(o, f)), null) then
+        error "The provided " + f + " must be filled out. Cannot proceed."
+      else
+        std.get(o, f)
+    ,
     // input: two boolean
     // output: logical or
     logical_or(a,b)::
@@ -461,9 +467,9 @@
     {
         'simpleaf index': {
             // This is used for deciding by which order the commands are run
-            "Step": null,
-            "Program Name": 'simpleaf index',
-            "Active": null,
+            "step": null,
+            "program-name": 'simpleaf index',
+            "active": null,
 
             // output directory
             "--output": null,
@@ -493,9 +499,9 @@
         },
         'simpleaf quant': {
             // This is used for deciding by which order the commands are run
-            "Step": null,
-            "Program Name": 'simpleaf quant',
-            "Active": null,
+            "step": null,
+            "program-name": 'simpleaf quant',
+            "active": null,
 
             // Options
             '--chemistry': null,
