@@ -21,25 +21,6 @@
         a && b
     ,
 
-    // this function returns the querying field of the object if it exiests,
-    // otherwise, it returns an error  
-    // input: an object, a field name
-    // output: the field of the object if exist
-    get(o, f, use_default = false, default = null)::
-        if std.isObject(o) then
-            if std.objectHas(o, f) then
-                o[f]
-            else if use_default then
-                default
-            else
-                error "The object does't have queried field  %s" % f
-        else if use_default then
-            default
-        else
-            error "Cannot get fields from a value: '%s'. " % o
-    ,
-
-
     # function ref_type:
     ref_type(type,arguments = {}) ::
         {
