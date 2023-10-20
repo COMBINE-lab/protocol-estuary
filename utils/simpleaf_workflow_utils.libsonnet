@@ -39,6 +39,81 @@
             error "Cannot get fields from a value: '%s'. " % o
     ,
 
+    feature_barcode_index(step, csv, optional_arguments, output = "feature_barcode") ::
+        {   
+            mkdir : {
+                active : true,
+                step: step,
+                "program-name": "mkdir",
+                "Arguments": ["-p", output]
+            },
+            create_t2g : {
+                active : true,
+                step: step + 0.1,
+                "program-name": "awk",
+                "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", csv, ">", output + "/.antibody_ref_t2g.tsv"],
+            },
+            
+            create_fasta : {
+                active : true,
+                step: step + 0.2,
+                "program-name": "awk",
+                "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", csv, ">", output + "/.antibody_ref.fa"]
+            },
+            simpleaf_index : simpleaf_index(
+                step + 0.3,
+                $.direct_ref(output + "/.antibody_ref.fa", output + "/.antibody_ref_t2g.tsv"),
+                {active : true, optional_arguments : optional_arguments},
+                output + "/simpleaf_index"
+            )
+        }
+    ,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // This function checks if there are simpleaf arguments in the object
     // according to the internal arg library we if there are, returns an error  
     // input: an object

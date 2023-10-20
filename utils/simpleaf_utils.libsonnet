@@ -21,6 +21,7 @@
         else if type == "direct_ref" then
             {
                 "--ref-seq" : $.get(arguments, "ref_seq"),
+                "t2g_map" : $.get(arguments, "t2g_map"),
             } 
         else if type == "existing_index" then
             {
@@ -37,8 +38,8 @@
     spliceu(fasta, gtf) ::
         ref_type("spliceu", {fasta: fasta, gtf: gtf})
     ,
-    direct_ref(ref_seq) ::
-        ref_type("direct_ref", {ref_seq: ref_seq})
+    direct_ref(ref_seq, t2g_map) ::
+        ref_type("direct_ref", {ref_seq: ref_seq, t2g_map: t2g_map})
     ,
     existing_index(index, t2g_map) ::
         ref_type("existing_index", {index: index, t2g_map: t2g_map})
@@ -51,31 +52,29 @@
     // 3. the output directory
     // This function create a simpleaf index record
     // There are two hidden fields: index and t2g_map.
-    simpleaf_index(ref_type, arguments = {}, output=".") ::
-        if ref_type == "existing_mappings" then
+    simpleaf_index(step, ref_type, arguments = {}, output="simpleaf_index") ::
+        local type = $.get(ref_type, "type");
+        {
+            type :: ref_type,
+            arguments :: arguments,
+            output :: output, 
+        } +
+        // ref type and arguments
+        ref_type +
+        // system fields
+        {   
+            "program-name" : "simpleaf index",
+            active : $.get(arguments, "active", true, type != "existing_index"),
+            step : step,
+            "--output" : output,
+        } +
+        if type != "existing_index" || type != "direct_ref" then 
             {
-                type :: ref_type,
-                arguments :: arguments,
-            }
-        else
-            local type = $.get(ref_type, "type");
-            // ref type and arguments
-            ref_type +
-            // system fields
-            {   
-                output :: output, 
-                "program-name" : "simpleaf index",
-                active : $.get(arguments, "active", true, type == "existing_index"),
-                step : $.get(arguments, "step", self.active, 0),
-                "--output" : output,
-            } +
-            if type != "existing_index" then 
-                {
-                    local o = output + "/simpleaf_index/index",
-                    "index" :: o,
-                    "t2g_map" :: o + "/t2g%s.tsv" % if type == "direct_ref" then "" else "_3col",
-                } else {} +
-            $.get(arguments, "optional_arguments", true, {})
+                local o = output + "/simpleaf_index/index",
+                "index" :: o,
+                "t2g_map" :: o + "/t2g_3col.tsv",
+            } else {} +
+        $.get(arguments, "optional_arguments", true, {})
     ,
 
     // set simpleaf quant parameter realted to mapping
@@ -152,7 +151,7 @@
     ,
 
     // create a simpleaf quant record
-    simpleaf_quant(map_type, cell_filtering_type, arguments, output=".") ::
+    simpleaf_quant(step, map_type, cell_filtering_type, arguments, output="simpleaf_quant") ::
         local map = $.get(map_type, "type");
         local filt = $.get(cell_filtering_type, "type");
 
@@ -164,7 +163,7 @@
             output :: output, 
             "program-name" : "simpleaf quant",
             active : $.get(arguments, "active", true, true),
-            step : $.get(arguments, "step", self.active, 0),
+            step : step,
             "--output" : output,
         } +
         $.get(arguments, "optional_arguments", true, {})
@@ -182,7 +181,7 @@
         else
             error "Cannot get fields from a value: '%s'. " % o
     ,
-    minimizer_length(klen) :: std.ceil(klen / 1.8) + 1
+    minimizer_length(klen) :: std.ceil(klen / 1.8) + 1,
 
     SimpleafPrograms::
     {
