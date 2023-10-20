@@ -119,7 +119,6 @@ local workflow = {
 	##########################################
 	# do not modify anything below line
 	##########################################
-	# 
 	simpleaf_index : utils.simpleaf_index(1, $.ref_type, $.simpleaf_index_arguments, $.simpleaf_index_output),
     simpleaf_quant : utils.simpleaf_quant(2, $.map_type, $.cell_filt, $.simpleaf_quant_arguments, $.simpleaf_quant_output),
 };
