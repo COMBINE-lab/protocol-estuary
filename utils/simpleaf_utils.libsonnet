@@ -33,16 +33,16 @@
     ,
 
     splici(fasta, gtf, rlen = 91) ::
-        ref_type("splici", {fasta: fasta, gtf: gtf, rlen: if rlen == null then 91 else rlen})
+        $.ref_type("splici", {fasta: fasta, gtf: gtf, rlen: if rlen == null then 91 else rlen})
     ,
     spliceu(fasta, gtf) ::
-        ref_type("spliceu", {fasta: fasta, gtf: gtf})
+        $.ref_type("spliceu", {fasta: fasta, gtf: gtf})
     ,
     direct_ref(ref_seq, t2g_map) ::
-        ref_type("direct_ref", {ref_seq: ref_seq, t2g_map: t2g_map})
+        $.ref_type("direct_ref", {ref_seq: ref_seq, t2g_map: t2g_map})
     ,
     existing_index(index, t2g_map) ::
-        ref_type("existing_index", {index: index, t2g_map: t2g_map})
+        $.ref_type("existing_index", {index: index, t2g_map: t2g_map})
     ,
 
     // create a simpleaf index record
@@ -89,7 +89,7 @@
                 "--t2g-map": $.get(simpleaf_index, "t2g_map"),
                 "--reads1" : $.get(arguments, "reads1"),
                 "--reads2" : $.get(arguments, "reads2"),
-            } +
+            }
         else if type == "existing_mappings" then
             {
                 "--map-dir" : $.get(arguments, "map_dir"),
@@ -99,11 +99,11 @@
             error "Unknown mapping type: %s" % type
     ,
 
-    map_reads(reads1, reads2, simpleaf_index : {}) ::
-        map_type("map_reads", {reads1: reads1, reads2: reads2}, simpleaf_index)
+    map_reads(reads1, reads2, simpleaf_index = {}) ::
+        $.map_type("map_reads", {reads1: reads1, reads2: reads2}, simpleaf_index)
     ,
     existing_mappings(map_dir, t2g_map) ::
-        map_type("existing_mappings", {map_dir: map_dir, t2g_map: t2g_map})
+        $.map_type("existing_mappings", {map_dir: map_dir, t2g_map: t2g_map})
     ,
 
     cell_filtering_type(type, argument = true) ::
@@ -135,19 +135,19 @@
             error "Unknown cell filtering type: %s" % type
     ,
     unfiltered_pl(permitlist) ::
-        cell_filtering_type("unfiltered_pl", unfiltered_pl)
+        $.cell_filtering_type("unfiltered_pl", permitlist)
     ,
     knee() ::
-        cell_filtering_type("knee")
+        $.cell_filtering_type("knee")
     ,
-    forced_cells(permitlist) ::
-        cell_filtering_type("forced", forced_cells)
+    forced_cells(num_cells) ::
+        $.cell_filtering_type("forced", num_cells)
     ,
-    expect_cells(expect_cells) ::
-        cell_filtering_type("expect", expect_cells)
+    expect_cells(num_cells) ::
+        $.cell_filtering_type("expect", num_cells)
     ,
     explicit_pl(permitlist) ::
-        cell_filtering_type("explicit_pl", explicit_pl)
+        $.cell_filtering_type("explicit_pl", permitlist)
     ,
 
     // create a simpleaf quant record
@@ -167,10 +167,10 @@
             "--output" : output,
         } +
         $.get(arguments, "optional_arguments", true, {})
-
+    ,
     get(o, f, use_default = false, default = null)::
         if std.isObject(o) then
-            if std.objectHas(o, f) then
+            if std.objectHasAll(o, f) then
                 o[f]
             else if use_default then
                 default

@@ -38,80 +38,86 @@ local workflow = {
 	##########################################
 	# Information for running `simpleaf index`
 	##########################################
-	simpleaf_index : simpleaf_index(
-		1, # step number: system variable, DO NOT MODIFY
-		#------------------------------------------------#
-		# 1 . select one of the follolwing reference type
-		utils.splici(null, null, 91)
-		# utils.splici("path/to/genome.fasta", "path/to/genes.gtf", read_length)
-		# utils.spliceu("path/to/genome.fasta", "path/to/genes.gtf")
-		# utils.direct_ref("path/to/transcriptome.fasta")
-		# utils.existing_index("path/to/existing_index", "path/to/t2g_3col.tsv" | "path/to/t2g.tsv")
-		,
-		#---------------------#
-		# 2. provide arguments
-		{	
-			active : true,
-			optional_arguments : {
-				"--spliced" : null,
-				"--unspliced" : null,
-				"--threads" : meta_info.threads,
-				"--dedup" : false,
-				"--sparse" : false,
-				"--use-pisem" : meta_info.use_piscem,
-				"--overwrite" : meta_info.use_piscem,
-				"--keep-duplicates" : false,
-				"--kmer-length" :  31,
-				"--minimizer-length" : utils.ml(std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
-			}
-		},
-		#----------------------------#
-		# 3. provide output directory
-		meta_info.output + "/simpleaf_index/index",
-	),
+	simpleaf_index_step_number :: 1, # step number: system variable, DO NOT MODIFY
+	#------------------------------------------------#
+	# 1 . select one of the follolwing reference type
+	simpleaf_index_ref_type :: utils.splici(null, null, 91) # recommended
+	# utils.splici("path/to/genome.fasta", "path/to/genes.gtf", read_length)
+	# utils.spliceu("path/to/genome.fasta", "path/to/genes.gtf")
+	# utils.direct_ref("path/to/transcriptome.fasta")
+	# utils.existing_index("path/to/existing_index", "path/to/t2g_3col.tsv" | "path/to/t2g.tsv")
+	,
+	#---------------------#
+	# 2. provide arguments
+	# If no special requirements, please use the default arguments
+	simpleaf_index_arguments :: {	
+		active : true,
+		optional_arguments : {
+			"--spliced" : null,
+			"--unspliced" : null,
+			"--dedup" : false,
+			"--sparse" : false,
+			"--keep-duplicates" : false,
+			"--threads" : meta_info.threads,
+			"--use-pisem" : meta_info.use_piscem,
+			"--overwrite" : meta_info.use_piscem,
+			"--kmer-length" :  31,
+			"--minimizer-length" : utils.ml(std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+		}
+	},
+	#----------------------------#
+	# 3. provide output directory
+	simpleaf_index_output :: meta_info.output + "/simpleaf_index",
 
 	##########################################
     # Information for running `simpleaf quant`
 	##########################################
-    simpleaf_quant : simpleaf_quant(
-		2, # step number: system variable, DO NOT MODIFY
-		
-		#-----------------------#
-		# 1. select mapping type
-		utils.map_reads(null, null, workflow.simpleaf_index)
+	simpleaf_quant_step_number :: 2, # step number: system variable, DO NOT MODIFY
+	
+	#-----------------------#
+	# 1. select mapping type
+	simpleaf_quant_map_type :: 
+		utils.map_reads(null, null, $.simpleaf_index) # Recommended
 		# utils.map_reads("path/to/R1_001.fastq,path/to/R1_002.fastq", "path/to/R2_001.fastq,path/to/R2_002.fastq", $.simpleaf_index)
 		# utils.existing_mappings("path/to/existing_map_dir, path/to/t2g.tsv" | "path/to/t2g_3col.tsv")
-		,
+	,
 
-		#------------------------------#
-		# 2. select cell filtering type
-		utils.unfiltered_pl(null)
+	#------------------------------#
+	# 2. REQUIRED : select cell filtering type
+	simpleaf_quant_cell_filt :: 
+		utils.unfiltered_pl(true) # recommended
 		# utils.unfiltered_pl("path/to/whitelist")
 		# utils.knee()
 		# utils.forced(forced_cell_nulber : int)
 		# utils.expect(expected_cell_number : int)
 		# utils.explicit_pl("path/to/whitelist")
-		,
+	,
 
-		#---------------------#
-		# 3. provide arguments
-		{
-			active : true,
-			optional_arguments : {
-				"--t2g-map": null,
-				"--chemistry" :  "10xv3",
-				"--resolution" :  "cr-like",
-				"--use-piscem" : meta_info.use_piscem,
-				"--expected-ori" :  "fw",
-				"--threads" :  meta_info.threads,
-				"--min-reads" : null,
-			}
-		},
+	#---------------------#
+	# 3. OPTIONAL : provide arguments
+	# If no special requirements, please use the default arguments
 
-		#----------------------------#
-		# 4. provide output directory
-		meta_info.output + "/simpleaf_quant",
-	),
+	simpleaf_quant_arguments :: {
+		active : true,
+		optional_arguments : {
+			"--t2g-map": null,
+			"--chemistry" :  "10xv3",
+			"--resolution" :  "cr-like",
+			"--use-piscem" : meta_info.use_piscem,
+			"--expected-ori" :  "fw",
+			"--threads" :  meta_info.threads,
+			"--min-reads" : null,
+		}
+	},
+
+	#----------------------------#
+	# 4. OPTIONAL : provide output directory
+	# If no special requirements, please use the default arguments
+	simpleaf_quant_output :: meta_info.output + "/simpleaf_quant",
+
+	# do not modify anything below line
+	simpleaf_index : utils.simpleaf_index($.simpleaf_index_step_number, $.simpleaf_index_ref_type, $.simpleaf_index_arguments, $.simpleaf_index_output),
+    simpleaf_quant : utils.simpleaf_quant($.simpleaf_quant_step_number, $.simpleaf_quant_map_type, $.simpleaf_quant_cell_filt, $.simpleaf_quant_arguments, $.simpleaf_quant_output),
 };
 
 std.prune({
