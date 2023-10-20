@@ -55,9 +55,9 @@
     simpleaf_index(step, ref_type, arguments = {}, output="simpleaf_index") ::
         local type = $.get(ref_type, "type");
         {
-            type :: ref_type,
+            ref_type :: ref_type,
             arguments :: arguments,
-            output :: output, 
+            output :: output,
         } +
         // ref type and arguments
         ref_type +
@@ -71,8 +71,8 @@
         if type != "existing_index" || type != "direct_ref" then 
             {
                 local o = output + "/simpleaf_index/index",
-                "index" :: o,
-                "t2g_map" :: o + "/t2g_3col.tsv",
+                index :: o,
+                t2g_map :: o + "/t2g_3col.tsv",
             } else {} +
         $.get(arguments, "optional_arguments", true, {})
     ,
@@ -154,13 +154,17 @@
     simpleaf_quant(step, map_type, cell_filtering_type, arguments, output="simpleaf_quant") ::
         local map = $.get(map_type, "type");
         local filt = $.get(cell_filtering_type, "type");
-
+        {
+            map_type :: map_type,
+            cell_filtering_type :: cell_filtering_type,
+            arguments :: arguments,
+            output :: output,
+        } +
         // ref type and arguments
         map_type +
         cell_filtering_type +
         // system fields
         {   
-            output :: output, 
             "program-name" : "simpleaf quant",
             active : $.get(arguments, "active", true, true),
             step : step,
@@ -181,7 +185,97 @@
         else
             error "Cannot get fields from a value: '%s'. " % o
     ,
-    minimizer_length(klen) :: std.ceil(klen / 1.8) + 1,
+    ml(use_piscem,klen) :: 
+        if use_piscem then
+            std.ceil(klen / 1.8) + 1
+        else
+            null
+    ,
+
+
+    feature_barcode_ref(step, csv, output) ::
+        {
+            step :: step,
+            csv :: csv,
+            output :: output,
+            mkdir : {
+                active : true,
+                step: step,
+                "program-name": "mkdir",
+                "Arguments": ["-p", output]
+            },
+            create_t2g : {
+                active : true,
+                step: step + 0.1,
+                "program-name": "awk",
+                "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", csv, ">", output + "/.antibody_ref_t2g.tsv"],
+            },
+            
+            create_fasta : {
+                active : true,
+                step: step + 0.2,
+                "program-name": "awk",
+                "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", csv, ">", output + "/.antibody_ref.fa"]
+            },
+            
+            ref_type :: {
+                type :: "direct_ref",
+                arguments :: {step: step, csv: csv, output: output},
+                t2g_map :: output + "/.antibody_ref_t2g.tsv",
+                "--ref-seq" :: output + "/.antibody_ref.fa",
+            }
+            // simpleaf_index : simpleaf_index(
+            //     step + 0.3,
+            //     $.direct_ref(output + "/.antibody_ref.fa", output + "/.antibody_ref_t2g.tsv"),
+            //     {active : true, optional_arguments : optional_arguments},
+            //     output + "/simpleaf_index"
+            // )
+        }
+    ,
+
+    barcode_translation(step, url, quant_cb, output) ::
+    {
+        step :: step,
+        url :: url,
+        quant_cb :: quant_cb,
+        output :: output,
+        mkdir : {
+            active : true,
+            step: step,
+            "program-name": "mkdir",
+            "Arguments": ["-p", output]
+        },
+
+        fetch_cb_translation_file : {
+            active : true,
+            step : step + 0.1,
+            "program-name" : "wget",
+            "Arguments": ["-O", output + "/.barcode.txt.gz", url],
+        },
+
+        unzip_cb_translation_file : {
+            active : true,
+            step : step + 0.2,
+            "program-name" : "gunzip",
+            "Arguments": ["-c", output + "/.barcode.txt.gz", ">", output + "/.barcode.txt"],
+        },
+
+        backup_bc_file : {
+            active : true,
+            step: step + 0.3,
+            "program-name": "mv",
+            "Arguments": [quant_cb, quant_cb + ".bkp"],
+        },
+
+        // Translate RNA barcode to feature barcode
+        barcode_translation : {
+            active : true,
+            step: step + 0.4,
+            "program-name": "awk",
+            "Arguments": ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", output + "/.barcode.txt", quant_cb + ".bkp", ">", quant_cb],
+        },  
+    },
+
 
     SimpleafPrograms::
     {

@@ -41,7 +41,9 @@ local workflow = {
 	##########################################
 	#------------------------------------------------#
 	# section 1 . select a reference type for simpleaf index
-	ref_type ::
+	ref_type :: {
+        
+    }
 		utils.splici(null, null, 91) # recommended
 		# utils.splici("path/to/genome.fasta", "path/to/genes.gtf", read_length)
 		# utils.spliceu("path/to/genome.fasta", "path/to/genes.gtf")
