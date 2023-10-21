@@ -9,8 +9,10 @@ function(workflow,patch=false,json={})
     if !std.isObject(o[key])
     };
 
-    if patch then
+    local manifest = if patch then
         workflow + makeMergeable(json)
         // std.mergePatch(workflow, json)
     else
         workflow
+    ;
+    std.prune(manifest)

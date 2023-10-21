@@ -16,27 +16,28 @@
 
 #############################################################################
 
-# meta info for the workflow
-local meta_info =  {
-    template_name : "10x Chromium 3' Feature Barcode CRISPR (TotalSeq-B/C)",
-    template_id : "10x-feature-barcode-crispr_totalseq-b-c",
-    template_version : "0.0.3",
-
-    
-    # number of threads for all commands
-    threads : 16, # or threads : INT, for example, threads : 16  
-    
-    # output directory
-    # default : `--output` arg in the command line
-    output : output, # or output : "/path/to/output/dir"
-
-    # boolean, true or false
-    use_piscem : true, # or use_piscem : false
-};
 
 # **For most users**, ONLY the information in the "recommended-config" section needs to be completed.
 # For advanced usage, please check the "advanced-config" sections.
-local workflow = {
+local template = {
+    # meta info for the workflow
+    meta_info :  {
+        template_name : "10x Chromium 3' Feature Barcode CRISPR (TotalSeq-B/C)",
+        template_id : "10x-feature-barcode-crispr_totalseq-b-c",
+        template_version : "0.0.3",
+
+        
+        # number of threads for all commands
+        threads : 16, # or threads : INT, for example, threads : 16  
+        
+        # output directory
+        # default : `--output` arg in the command line
+        output : output, # or output : "/path/to/output/dir"
+
+        # boolean, true or false
+        use_piscem : true, # or use_piscem : false
+    },
+
 	##################
 	# Required config
 	##################
@@ -89,17 +90,17 @@ local workflow = {
             optional_arguments : {
                 "--sparse" : false,
                 "--keep-duplicates" : false,
-                "--threads" : meta_info.threads,
-                "--use-pisem" : meta_info.use_piscem,
-                "--overwrite" : meta_info.use_piscem,
+                "--threads" : $.meta_info.threads,
+                "--use-pisem" : $.meta_info.use_piscem,
+                "--overwrite" : $.meta_info.use_piscem,
                 "--kmer-length" :  7,
-                "--minimizer-length" : utils.ml(meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
             }
         },
 
         #----------------------------#
         # 3. provide output directory
-        simpleaf_index_output :: meta_info.output + "/antibody_capture/simpleaf_index"
+        simpleaf_index_output :: $.meta_info.output + "/antibody_capture/simpleaf_index"
         ,
 
         ##########################################
@@ -132,9 +133,9 @@ local workflow = {
             optional_arguments : {
                 "--chemistry" :  "1{b[16]u[12]}2{x[10]r[15]x:}",
                 "--resolution" :  "cr-like",
-                "--use-piscem" : meta_info.use_piscem,
+                "--use-piscem" : $.meta_info.use_piscem,
                 "--expected-ori" :  "fw",
-                "--threads" :  meta_info.threads,
+                "--threads" :  $.meta_info.threads,
                 "--min-reads" : null,
             }
         },
@@ -142,7 +143,7 @@ local workflow = {
         #----------------------------#
         # 4. OPTIONAL : provide output directory
         # If no special requirements, please use the default arguments
-        simpleaf_quant_output :: meta_info.output + "/gene_expression/simpleaf_quant",
+        simpleaf_quant_output :: $.meta_info.output + "/gene_expression/simpleaf_quant",
 
     },
 
@@ -158,17 +159,17 @@ local workflow = {
                 "--dedup" : false,
                 "--sparse" : false,
                 "--keep-duplicates" : false,
-                "--threads" : meta_info.threads,
-                "--use-pisem" : meta_info.use_piscem,
-                "--overwrite" : meta_info.use_piscem,
+                "--threads" : $.meta_info.threads,
+                "--use-pisem" : $.meta_info.use_piscem,
+                "--overwrite" : $.meta_info.use_piscem,
                 "--kmer-length" :  31,
-                "--minimizer-length" : utils.ml(meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
             }
         },
 
         #----------------------------#
         # 3. provide output directory
-        simpleaf_index_output :: meta_info.output + "/gene_expression/simpleaf_index"
+        simpleaf_index_output :: $.meta_info.output + "/gene_expression/simpleaf_index"
         ,
 
         #---------------------#
@@ -179,9 +180,9 @@ local workflow = {
             optional_arguments : {
                 "--chemistry" :  "10xv3",
                 "--resolution" :  "cr-like",
-                "--use-piscem" : meta_info.use_piscem,
+                "--use-piscem" : $.meta_info.use_piscem,
                 "--expected-ori" :  "fw",
-                "--threads" :  meta_info.threads,
+                "--threads" :  $.meta_info.threads,
                 "--min-reads" : null,
             }
         },
@@ -189,7 +190,7 @@ local workflow = {
         #----------------------------#
         # 4. OPTIONAL : provide output directory
         # If no special requirements, please use the default arguments
-        simpleaf_quant_output :: meta_info.output + "/gene_expression/simpleaf_quant",
+        simpleaf_quant_output :: $.meta_info.output + "/gene_expression/simpleaf_quant",
     },
 
     antibody_capture_arguments +: {
@@ -216,7 +217,6 @@ local workflow = {
     
 };
 
-std.prune({
-	"meta-info": meta_info,
-	workflow : workflow
-})
+std.prune(
+    template
+)
