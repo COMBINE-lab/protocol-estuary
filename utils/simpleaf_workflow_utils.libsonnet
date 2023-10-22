@@ -22,7 +22,9 @@
     ,
 
     # function ref_type:
-    ref_type(type,arguments = {}) ::
+    ref_type(obj) ::
+        local type = $.get(obj, "type");
+        local arguments = $.get(obj, type);
         {
             type :: type,
             arguments :: arguments,
@@ -43,12 +45,12 @@
         else if type == "direct_ref" then
             {
                 "--ref-seq" : $.get(arguments, "ref_seq"),
-                "t2g_map" : $.get(arguments, "t2g_map"),
+                t2g_map :: $.get(arguments, "t2g_map"),
             } 
         else if type == "existing_index" then
             {
-                "index" :: $.get(arguments, "index"),
-                "t2g_map" :: $.get(arguments, "t2g_map"),
+                index :: $.get(arguments, "index"),
+                t2g_map :: $.get(arguments, "t2g_map"),
             }
         else
             error "Unknown reference type: %s" % type
@@ -74,33 +76,32 @@
     // 3. the output directory
     // This function create a simpleaf index record
     // There are two hidden fields: index and t2g_map.
-    simpleaf_index(step, ref_type, arguments = {}, output="simpleaf_index") ::
+    simpleaf_index(step, ref_type, arguments, output="simpleaf_index") ::
         local type = $.get(ref_type, "type");
+        local active = $.get(arguments, "active");
+        local o = output + "/simpleaf_index/index";
         {
             ref_type :: ref_type,
             arguments :: arguments,
             output :: output,
-        } +
-        // ref type and arguments
-        ref_type +
-        // system fields
-        {   
-            "program-name" : "simpleaf index",
-            active : $.get(arguments, "active", true, type != "existing_index"),
+            program_name : "simpleaf index",
             step : step,
             "--output" : output,
         } +
-        if type != "existing_index" || type != "direct_ref" then 
-            {
-                local o = output + "/simpleaf_index/index",
-                index :: o,
-                t2g_map :: o + "/t2g_3col.tsv",
-            } else {} +
-        $.get(arguments, "optional_arguments", true, {})
+        // ref type and arguments
+        ref_type +
+        arguments +
+        {
+            local o = output + "/simpleaf_index/index",
+            [if type != "existing_index" then "index"] :: o,
+            [if type != "existing_index" && type != "direct_ref" then "t2g_map"] :: o + "/t2g_3col.tsv",
+        }
     ,
 
     // set simpleaf quant parameter realted to mapping
-    map_type(type, arguments, simpleaf_index = {}) ::
+    map_type(obj, simpleaf_index = {}) ::
+        local type = $.get(obj, "type");
+        local arguments = $.get(obj, type);
         {
             type :: type,
             arguments :: arguments,
@@ -128,7 +129,9 @@
         $.map_type("existing_mappings", {map_dir: map_dir, t2g_map: t2g_map})
     ,
 
-    cell_filtering_type(type, argument = true) ::
+    cell_filt_type(obj) ::
+        local type = $.get(obj, "type");
+        local argument = $.get(obj, type);
         {
             type :: type,
             argument :: argument,
@@ -157,43 +160,41 @@
             error "Unknown cell filtering type: %s" % type
     ,
     unfiltered_pl(permitlist) ::
-        $.cell_filtering_type("unfiltered_pl", permitlist)
+        $.cell_filt_type("unfiltered_pl", permitlist)
     ,
     knee() ::
-        $.cell_filtering_type("knee")
+        $.cell_filt_type("knee")
     ,
     forced_cells(num_cells) ::
-        $.cell_filtering_type("forced", num_cells)
+        $.cell_filt_type("forced", num_cells)
     ,
     expect_cells(num_cells) ::
-        $.cell_filtering_type("expect", num_cells)
+        $.cell_filt_type("expect", num_cells)
     ,
     explicit_pl(permitlist) ::
-        $.cell_filtering_type("explicit_pl", permitlist)
+        $.cell_filt_type("explicit_pl", permitlist)
     ,
 
     // create a simpleaf quant record
-    simpleaf_quant(step, map_type, cell_filtering_type, arguments, output="simpleaf_quant") ::
+    simpleaf_quant(step, map_type, cell_filt_type, arguments, output) ::
         local map = $.get(map_type, "type");
-        local filt = $.get(cell_filtering_type, "type");
+        local filt = $.get(cell_filt_type, "type");
+        local active = $.get(arguments, "active");
         {
             map_type :: map_type,
-            cell_filtering_type :: cell_filtering_type,
+            cell_filt_type :: cell_filt_type,
             arguments :: arguments,
             output :: output,
-        } +
-        // ref type and arguments
-        map_type +
-        cell_filtering_type +
-        // system fields
-        {   
-            "program-name" : "simpleaf quant",
-            active : $.get(arguments, "active", true, true),
+            program_name : "simpleaf quant",
             step : step,
             "--output" : output,
         } +
-        $.get(arguments, "optional_arguments", true, {})
+        // ref type and arguments
+        map_type +
+        cell_filt_type +
+        arguments
     ,
+
     get(o, f, use_default = false, default = null)::
         if std.isObject(o) then
             if std.objectHasAll(o, f) then
@@ -207,6 +208,7 @@
         else
             error "Cannot get fields from a value: '%s'. " % o
     ,
+    
     ml(use_piscem,klen) :: 
         if use_piscem then
             std.ceil(klen / 1.8) + 1
@@ -727,7 +729,6 @@
     // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
     // records
     add_index_dir_for_simpleaf_index_quant_combo(o)::
-
         if std.isObject(o) then
             // check if it has a record called `simpleaf_index`
             if  std.objectHas(o, "simpleaf_index") then
