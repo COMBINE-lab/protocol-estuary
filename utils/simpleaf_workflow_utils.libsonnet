@@ -220,83 +220,79 @@
     feature_barcode_ref(step, csv, output) ::
         {
             step :: step,
+            last_step :: step + 2,
             csv :: csv,
             output :: output,
             mkdir : {
                 active : true,
                 step: step,
-                "program-name": "mkdir",
-                "Arguments": ["-p", output]
+                program_name: "mkdir",
+                arguments: ["-p", output]
             },
             create_t2g : {
                 active : true,
-                step: step + 0.1,
-                "program-name": "awk",
-                "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", csv, ">", output + "/.antibody_ref_t2g.tsv"],
+                step: step + 1,
+                program_name: "awk",
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", csv, ">", output + "/.antibody_ref_t2g.tsv"],
             },
             
             create_fasta : {
                 active : true,
-                step: step + 0.2,
-                "program-name": "awk",
-                "Arguments": ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", csv, ">", output + "/.antibody_ref.fa"]
+                step: step + 2,
+                program_name: "awk",
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", csv, ">", output + "/.antibody_ref.fa"]
             },
             
             ref_type :: {
                 type :: "direct_ref",
                 arguments :: {step: step, csv: csv, output: output},
                 t2g_map :: output + "/.antibody_ref_t2g.tsv",
-                "--ref-seq" :: output + "/.antibody_ref.fa",
+                "--ref-seq" : output + "/.antibody_ref.fa",
             }
-            // simpleaf_index : simpleaf_index(
-            //     step + 0.3,
-            //     $.direct_ref(output + "/.antibody_ref.fa", output + "/.antibody_ref_t2g.tsv"),
-            //     {active : true, optional_arguments : optional_arguments},
-            //     output + "/simpleaf_index"
-            // )
         }
     ,
 
     barcode_translation(step, url, quant_cb, output) ::
     {
         step :: step,
+        last_step :: step + 4,
         url :: url,
         quant_cb :: quant_cb,
         output :: output,
         mkdir : {
             active : true,
-            step: step,
-            "program-name": "mkdir",
-            "Arguments": ["-p", output]
+            step : step,
+            program_name : "mkdir",
+            arguments : ["-p", output]
         },
 
         fetch_cb_translation_file : {
             active : true,
-            step : step + 0.1,
-            "program-name" : "wget",
-            "Arguments": ["-O", output + "/.barcode.txt.gz", url],
+            step : step + 1,
+            program_name : "wget",
+            arguments : ["-O", output + "/.barcode.txt.gz", url],
         },
 
         unzip_cb_translation_file : {
             active : true,
-            step : step + 0.2,
-            "program-name" : "gunzip",
-            "Arguments": ["-c", output + "/.barcode.txt.gz", ">", output + "/.barcode.txt"],
+            step : step + 2,
+            "program_name" : "gunzip",
+            "arguments": ["-c", output + "/.barcode.txt.gz", ">", output + "/.barcode.txt"],
         },
 
         backup_bc_file : {
             active : true,
-            step: step + 0.3,
-            "program-name": "mv",
-            "Arguments": [quant_cb, quant_cb + ".bkp"],
+            step: step + 3,
+            program_name: "mv",
+            arguments: [quant_cb, quant_cb + ".bkp"],
         },
 
         // Translate RNA barcode to feature barcode
         barcode_translation : {
             active : true,
-            step: step + 0.4,
-            "program-name": "awk",
-            "Arguments": ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", output + "/.barcode.txt", quant_cb + ".bkp", ">", quant_cb],
+            step: step + 4,
+            program_name: "awk",
+            arguments: ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", output + "/.barcode.txt", quant_cb + ".bkp", ">", quant_cb],
         },  
     },
 
@@ -354,11 +350,11 @@
             // skip meta info and root layer values
             if field_name == "meta_info" || !std.isObject(field) then
                 field
-            // if we see Step, then this field should be a command record
-            else if std.objectHas(field, "Step") then
-                // there should be a Program Name field
-                if std.objectHas(field, "Program Name") then
-                    local program_name = $.get(field, "Program Name"); 
+            // if we see step, then this field should be a command record
+            else if std.objectHas(field, "step") then
+                // there should be a program_name field
+                if std.objectHas(field, "program_name") then
+                    local program_name = $.get(field, "program_name"); 
                     // check if it is a simpleaf command
                     if std.objectHas($.SimpleafPrograms, program_name) then
                         if std.foldl(
@@ -380,7 +376,7 @@
                     else
                         field
                 else
-                    error "Found record with Step but no  Program Name: %s; Cannot proceed." % path + field_name
+                    error "Found record with step but no  program_name: %s; Cannot proceed." % path + field_name
             else
                 $.check_invalid_args(field,  path + field_name + " -> ")
         for field_name in std.objectFields(o)
@@ -442,11 +438,11 @@
             [field_name]:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if  std.objectHas(field, "Step") then
-                        if !std.objectHas(field, "Program Name") then
-                            error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % name + field_name
+                    if  std.objectHas(field, "step") then
+                        if !std.objectHas(field, "program_name") then
+                            error "Found a command record with no 'program_name' field: %s; Cannot proceed." % name + field_name
                         else
-                            local program_name = $.get(field, "Program Name");
+                            local program_name = $.get(field, "program_name");
                             local program_args = $.get($.SimpleafPrograms, program_name, use_default=true);
                             if program_args != null then
                                 if std.objectHas(program_args, "--output") then
@@ -585,11 +581,11 @@
             [field_name] +:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if std.objectHas(field, "Step") then
-                        if !std.objectHas(field, "Program Name") then
-                            error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % path
+                    if std.objectHas(field, "step") then
+                        if !std.objectHas(field, "program_name") then
+                            error "Found a command record with no 'program_name' field: %s; Cannot proceed." % path
                         else
-                            local program_name = $.get(field, "Program Name");
+                            local program_name = $.get(field, "program_name");
                             // if we see "simpleaf index" then we process it
                             if std.objectHas($.SimpleafPrograms, program_name) then
                                 // then find the correspondence of the possible 
@@ -641,11 +637,11 @@
             [field_name]:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if  std.objectHas(field, "Step") then
-                        if !std.objectHas(field, "Program Name") then
-                            error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % name + field_name
+                    if  std.objectHas(field, "step") then
+                        if !std.objectHas(field, "program_name") then
+                            error "Found a command record with no 'program_name' field: %s; Cannot proceed." % name + field_name
                         else
-                            local program_name = $.get(field, "Program Name");
+                            local program_name = $.get(field, "program_name");
                             local program_args = $.get($.SimpleafPrograms, program_name, use_default=true);
                             if program_args != null then
                                 field + std.prune({
@@ -770,7 +766,7 @@
         'simpleaf index': {
             // This is used for deciding by which order the commands are run
             "step": null,
-            "program-name": 'simpleaf index',
+            "program_name": 'simpleaf index',
             "active": null,
 
             // output directory
@@ -802,7 +798,7 @@
         'simpleaf quant': {
             // This is used for deciding by which order the commands are run
             "step": null,
-            "program-name": 'simpleaf quant',
+            "program_name": 'simpleaf quant',
             "active": null,
 
             // Options

@@ -1,4 +1,4 @@
-function(workflow,patch=false,json={})
+function(template,patch=false,json={})
     local makeMergeable(o) = {
     [key]+: makeMergeable(o[key])
     for key in std.objectFields(o)
@@ -10,9 +10,11 @@ function(workflow,patch=false,json={})
     };
 
     local manifest = if patch then
-        workflow + makeMergeable(json)
-        // std.mergePatch(workflow, json)
+        template + makeMergeable(json)
     else
-        workflow
+        std.mergePatch(template, json)
     ;
-    std.prune(manifest)
+    std.prune({
+        meta_info : manifest.meta_info,
+        template : manifest.template,
+    })
