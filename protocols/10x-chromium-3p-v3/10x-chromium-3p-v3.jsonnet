@@ -15,16 +15,16 @@ local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
 local output = std.extVar("__output");# system variable, DO NOT MODIFY
 
 # meta_info contains meta information of the workflow
-local meta_info : {
-		# number of threads for all commands
-		threads : 16, # change to other integer if needed # This defines `simpleaf index/quant --threads`
+local meta_info = {
+	# number of threads for all commands
+	threads : 16, # change to other integer if needed # This defines `simpleaf index/quant --threads`
 
-		# boolean, true or false
-		use_piscem : false, # or use_piscem: false # This defines `simpleaf index/quant --use-piscem`
+	# boolean, true or false
+	use_piscem : false, # or use_piscem: false # This defines `simpleaf index/quant --use-piscem`
 
-		# Output directory. Do not change if setting `--output` from command line
-		output: output, # or output: "/path/to/output/dir" # this defines `simpleaf index/quant --output`
-	},
+	# Output directory. Do not change if setting `--output` from command line
+	output: output, # or output: "/path/to/output/dir" # this defines `simpleaf index/quant --output`
+};
 
 local template = {
 	# meta info of the workflow
