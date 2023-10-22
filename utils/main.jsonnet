@@ -16,5 +16,5 @@ function(workflow,patch=false,json={})
     ;
     std.prune({
         meta_info : manifest.meta_info,
-        template : manifest.template,
+        workflow : manifest.workflow,
     })
