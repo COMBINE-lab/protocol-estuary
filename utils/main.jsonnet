@@ -12,7 +12,7 @@ function(workflow,patch=false,json={})
     local manifest = if patch then
         workflow + makeMergeable(json)
     else
-        std.mergePatch(workflow, json)
+        workflow
     ;
     std.prune({
         meta_info : manifest.meta_info,

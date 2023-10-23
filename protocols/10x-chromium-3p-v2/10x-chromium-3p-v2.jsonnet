@@ -1,3 +1,5 @@
+local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
+local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
 // 10x Chromium 3' v2 gene expression data processing
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
@@ -11,8 +13,6 @@
 
 # NOTE: You can pass optional simpleaf arguments specified in the advanced-config and optional config sections.
 #############################################################################
-local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
-local output = std.extVar("__output");# system variable, DO NOT MODIFY
 
 # meta_info contains meta information of the workflow
 local meta_info = {
