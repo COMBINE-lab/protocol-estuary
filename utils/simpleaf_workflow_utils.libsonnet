@@ -81,7 +81,12 @@
         local active = $.get(arguments, "active");
         local o = output + "/simpleaf_index/index";
         {
-            ref_type :: ref_type,
+            ref_type :: 
+                if std.member((std.objectValues(ref_type),null)) then
+                    error "The selected ref_type contains null vlaues. Cannot proceed."    
+                else 
+                    ref_type
+            ,
             arguments :: arguments,
             output :: output,
             program_name : "simpleaf index",
@@ -89,11 +94,8 @@
             "--output" : output,
         } +
         // ref type and arguments
-        if std.member((std.objectValues(ref_type),null)) then
-            error "The selected ref_type contains null vlaues. Cannot proceed."    
-        else 
-            ref_type
-        +
+
+        ref_type +
         arguments +
         {
             local o = output + "/simpleaf_index/index",
