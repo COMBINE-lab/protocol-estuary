@@ -89,7 +89,6 @@
             "--output" : output,
         } +
         // ref type and arguments
-
         if std.member(std.objectValues(ref_type), null) then
             error "The selected ref_type contains null vlaues. Cannot proceed."    
         else 
@@ -195,7 +194,12 @@
             "--output" : output,
         } +
         // ref type and arguments
-        map_type +
+
+        if std.member(std.objectValues(map_type), null) then
+            error "The selected map_type contains null vlaues. Cannot proceed."    
+        else 
+            map_type
+        +
         cell_filt_type +
         arguments
     ,
