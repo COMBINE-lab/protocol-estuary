@@ -39,16 +39,16 @@ local template = {
             # section 1.1 provide genome fasta and gtf files to build a splici index
             # For other ref types, please check the "advanced_config/ref_type" sections.
             splici : {
-                gtf : "gex.gtf", # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
-                fasta : "gex.fa", # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
+                gtf : null, # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
+                fasta : null, # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
                 rlen : 98,  # This defines `/workflow/simpleaf_index/--rlen`
             },
 
             #-----------------------------------------------------------------------#
             # section 1.2 provide comma separated read fastq files for mapping
             map_reads : {
-                reads1 : "gex.reads1", # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
-                reads2 : "gex.reads2", # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
+                reads1 : null, # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
+                reads2 : null, # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
             },
         },
         #-----------------------------------------------------------------------#
@@ -56,13 +56,13 @@ local template = {
         ADT : {
             #-----------------------------------------------------------------------#
             # section 2.1 provide genome fasta and gtf files to build a splici index
-            feature_barcode_csv : "feature_barcode_csv", # REQUIRED
+            feature_barcode_csv : null, # REQUIRED
 
             #-----------------------------------------------------------------------#
             # section 2.2 provide comma separated read fastq files for mapping
             map_reads : {
-                reads1 : "ac.reads1", # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
-                reads2 : "ac.reads2", # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
+                reads1 : null, # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
+                reads2 : null, # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
             },
         },
 	},
