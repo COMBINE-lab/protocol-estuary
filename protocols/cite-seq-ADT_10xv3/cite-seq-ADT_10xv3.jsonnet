@@ -324,10 +324,10 @@ local template = {
         external_commands : {
             [if $.fast_config.ADT.feature_barcode_csv != null then "ADT_feature_barcode_ref"] : utils.feature_barcode_ref(
                 3,
+                $.fast_config.ADT.feature_barcode_csv, 
                 1,
                 4,
-                $.fast_config.ADT.feature_barcode_csv, 
-                $.workflow.ADT.simpleaf_index.output
+                $.advanced_config.ADT.simpleaf_index.output,
             ),
         }
 	},

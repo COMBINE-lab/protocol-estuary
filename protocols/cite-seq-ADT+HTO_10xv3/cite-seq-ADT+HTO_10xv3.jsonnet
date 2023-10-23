@@ -449,17 +449,17 @@ local template = {
         external_commands : {
             [if $.fast_config.ADT.feature_barcode_csv != null then "ADT_feature_barcode_ref"] : utils.feature_barcode_ref(
                 3,
+                $.fast_config.ADT.feature_barcode_csv, 
                 1,
                 4,
-                $.fast_config.ADT.feature_barcode_csv, 
-                $.workflow.ADT.simpleaf_index.output
+                $.advanced_config.ADT.simpleaf_index.output
             ),
             [if $.fast_config.HTO.feature_barcode_csv != null then "HTO_feature_barcode_ref"] : utils.feature_barcode_ref(
                 8,
+                $.fast_config.HTO.feature_barcode_csv, 
                 1,
                 4,
-                $.fast_config.HTO.feature_barcode_csv, 
-                $.workflow.HTO.simpleaf_index.output
+                $.advanced_config.HTO.simpleaf_index.output
             ),
         }
 	},

@@ -325,15 +325,15 @@ local template = {
             barcode_translation : utils.barcode_translation(
                 3, 
                 "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz", 
-                $.workflow.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",
-                $.workflow.gene_expression.simpleaf_quant.output
+                $.advanced_config.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",
+                $.advanced_config.gene_expression.simpleaf_quant.output
             ),
             [if $.fast_config.antibody_capture.feature_barcode_csv != null then "feature_barcode_ref"] : utils.feature_barcode_ref(
                 8,
+                $.fast_config.antibody_capture.feature_barcode_csv, 
                 1,
                 5,
-                $.fast_config.antibody_capture.feature_barcode_csv, 
-                $.workflow.antibody_capture.simpleaf_index.output
+                $.advanced_config.antibody_capture.simpleaf_index.output
             ),
         }
 	},
