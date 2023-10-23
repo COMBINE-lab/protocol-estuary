@@ -82,7 +82,7 @@
         local o = output + "/simpleaf_index/index";
         {
             ref_type :: 
-                if std.member((std.objectValues(ref_type),null)) then
+                if std.member(std.objectValues(ref_type),null) then
                     error "The selected ref_type contains null vlaues. Cannot proceed."    
                 else 
                     ref_type
