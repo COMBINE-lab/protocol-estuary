@@ -208,8 +208,8 @@ local template = {
                     # Option 1 : direct_ref
                     # DO NOT change unless you have a 
                     direct_ref : {
-                        ref_seq : $.external_commands.ADT_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
-                        t2g_map : $.external_commands.ADT_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                        ref_seq : $.workflow.external_commands.ADT_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : $.workflow.external_commands.ADT_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
                     },
 
                     # Option 2 : existing_index
@@ -230,7 +230,7 @@ local template = {
                     "--use-pisem" : $.meta_info.use_piscem, 
                     "--overwrite" : $.meta_info.use_piscem,
                     "--kmer-length" :  7,
-                    "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get($.advanced_config.ADT.simpleaf_index.arguments, "--kmer-length")), # a quick way to calculate minimizer length
                 },
 
             #-----------------------------------------------------------------------#
@@ -304,8 +304,8 @@ local template = {
                     # Option 1 : direct_ref
                     # DO NOT change unless you have a 
                     direct_ref : {
-                        ref_seq : $.external_commands.HTO_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
-                        t2g_map : $.external_commands.HTO_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                        ref_seq : $.workflow.external_commands.HTO_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : $.workflow.external_commands.HTO_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
                     },
 
                     # Option 2 : existing_index

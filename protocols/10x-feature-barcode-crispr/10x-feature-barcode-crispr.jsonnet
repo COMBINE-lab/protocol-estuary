@@ -194,8 +194,8 @@ local template = {
                     # Option 1 : direct_ref
                     # DO NOT change unless you have a 
                     direct_ref : {
-                        ref_seq : $.external_commands.feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
-                        t2g_map : $.external_commands.feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                        ref_seq : $.workflow.external_commands.feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : $.workflow.external_commands.feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
                     },
 
                     # Option 2 : existing_index
