@@ -243,7 +243,7 @@
                 active : true,
                 step: step + 1,
                 program_name: "awk",
-                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$" + name_col + ");print $" + name_col + "\"\\t\"$" + name_col + "}'" % , csv, ">", output + "/.feature_barcode_ref_t2g.tsv"],
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$" + name_col + ");print $" + name_col + "\"\\t\"$" + name_col + "}'", csv, ">", output + "/.feature_barcode_ref_t2g.tsv"],
             },
             
             create_fasta : {
