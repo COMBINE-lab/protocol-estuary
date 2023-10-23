@@ -231,7 +231,7 @@
             last_step :: step + 2,
             csv :: csv,
             output :: output,
-            ref_seq :: output + "/.feature_barcode_ref.fa"
+            ref_seq :: output + "/.feature_barcode_ref.fa",
             t2g_map :: output + "/.feature_barcode_ref_t2g.tsv",
             mkdir : {
                 active : true,
