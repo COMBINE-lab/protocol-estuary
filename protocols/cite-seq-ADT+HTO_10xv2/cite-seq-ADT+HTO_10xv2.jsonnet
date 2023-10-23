@@ -1,6 +1,6 @@
 local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
 local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
-// CITE-seq ADT+HTO with 10x Chromium 3' v2 (TotalSeq-A chemistry)
+// CITE-seq ADT with 10x Chromium 3' v2 (TotalSeq-A chemistry)
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
 # README:
@@ -61,11 +61,10 @@ local template = {
             #-----------------------------------------------------------------------#
             # section 2.2 provide comma separated read fastq files for mapping
             map_reads : {
-                reads1 : "ADT.reads1", # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
-                reads2 : "ADT.reads2", # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
+                reads1 : "ac.reads1", # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
+                reads2 : "ac.reads2", # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
             },
         },
-
         #-----------------------------------------------------------------------#
         # Fast config section 3 . HTO modality
         HTO : {
@@ -76,8 +75,8 @@ local template = {
             #-----------------------------------------------------------------------#
             # section 3.2 provide comma separated read fastq files for mapping
             map_reads : {
-                reads1 : "HTO.reads1", # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
-                reads2 : "HTO.reads2", # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
+                reads1 : "ac.reads1", # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
+                reads2 : "ac.reads2", # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
             },
         },
 	},
@@ -95,7 +94,7 @@ local template = {
         gene_expression : {
             simpleaf_index : {
             #-----------------------------------------------------------------------#
-                # 1. reference options
+                # section 1.1 reference options
                 ref_type : {
                     # The arguments of the default option should be set in fast_config,
                     # For other options, select one from the following options and fill in the required arguments below
@@ -111,6 +110,8 @@ local template = {
                     # Option 2 : direct_ref
                     direct_ref : {
                         ref_seq : null, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+
                     },
 
                     # Option 3 : existing_index
@@ -121,7 +122,7 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # 2. simpleaf index arguments
+                # section 1.2 simpleaf index arguments
                 # If no special requirements, please use the default arguments
                 arguments : {	
                     active : true, # if false, simpleaf index command will be skipped
@@ -138,14 +139,14 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # 3. provide simpleaf index output directory
+                # section 1.3 provide simpleaf index output directory
                 # If no special requirements, please use the default arguments
                 output : $.meta_info.output + "/gene_expression/simpleaf_index",
             },
 
             simpleaf_quant : {
             #-----------------------------------------------------------------------#
-                # 4. mapping options
+                # section 1.4 mapping options
                 map_type : {
                     # The arguments of the default option should be set in fast_config,
                     # For other options, select one from the following options and fill in the required arguments below
@@ -157,7 +158,7 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # 5. provide cell filter strategy
+                # section 1.5 provide cell filter strategy
                 cell_filt_type : {
                     # The arguments of the default option has been set,
                     # For other options, select one from the following options and fill in the required arguments below
@@ -172,7 +173,7 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # 6. provide simpleaf quant arguments
+                # section 1.6 provide simpleaf quant arguments
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
@@ -185,7 +186,7 @@ local template = {
                 },
 
                 #----------------------------#
-                # 4. provide simpleaf quant output directory
+                # section 1.7 provide simpleaf quant output directory
                 # If no special requirements, please use the default arguments
                 output : $.meta_info.output + "/gene_expression/simpleaf_quant",
             },
@@ -195,8 +196,31 @@ local template = {
         # Advanced config section 2 : ADT modality
         ADT : {
             simpleaf_index : {
+
             #-----------------------------------------------------------------------#
-                # section 2.1. simpleaf index arguments
+                # section 2.1 reference options
+                ref_type : {
+                    # The arguments of the default option should be set in fast_config,
+                    # For other options, select one from the following options and fill in the required arguments below
+                    # "spliceu", "direct_ref" or "existing_index" 
+                    type : "direct_ref", 
+
+                    # Option 1 : direct_ref
+                    # DO NOT change unless you have a 
+                    direct_ref : {
+                        ref_seq : $.external_commands.ADT_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : $.external_commands.ADT_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                    },
+
+                    # Option 2 : existing_index
+                    existing_index : {
+                        map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+                        t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                    },
+                },
+
+            #-----------------------------------------------------------------------#
+                # section 2.2 simpleaf index arguments
                 # If no special requirements, please use the default arguments
                 arguments : {	
                     active : true, # if false, simpleaf index command will be skipped
@@ -210,14 +234,14 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # section 2.2. provide simpleaf index output directory
+                # section 2.3 provide simpleaf index output directory
                 # If no special requirements, please use the default arguments
                 output : $.meta_info.output + "/ADT/simpleaf_index",
             },
 
             simpleaf_quant : {
             #-----------------------------------------------------------------------#
-                # section 2.3. mapping options
+                # section 2.4 mapping options
                 map_type : {
                     # The arguments of the default option should be set in fast_config,
                     # For other options, select one from the following options and fill in the required arguments below
@@ -230,14 +254,14 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # section 2.4. provide cell filter strategy
+                # section 2.5 provide cell filter strategy
                 cell_filt_type : {
                     # The arguments of the default option has been set,
                     # For other options, select one from the following options and fill in the required arguments below
                     # "unfiltered_pl", "knee", "expect_cells", "forced_cells", or "explicit_pl"
                     type : "explicit_pl",
                     
-                    explicit_pl : $.workflow.external_commands.barcode_translation.quant_cb,   # This defines `simpleaf quant --explicit-pl`
+                    explicit_pl : $.workflow.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",   # This defines `simpleaf quant --explicit-pl`
                     unfiltered_pl : true, # or unfiltered_pl : "path/to/whitelist" # This defines `simpleaf quant --unfiltered-pl`
                     knee : false, # or knee : true  # This defines `simpleaf quant --knee`
                     expect_cells : null, # e.g., 10000 # This defines `simpleaf quant --expect-cells`
@@ -245,7 +269,7 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # section 2.5. provide simpleaf quant arguments
+                # section 2.6 provide simpleaf quant arguments
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
@@ -258,18 +282,41 @@ local template = {
                 },
 
                 #----------------------------#
-                # section 2.6 : provide simpleaf quant output directory
+                # section 2.7 : provide simpleaf quant output directory
                 # If no special requirements, please use the default arguments
                 output : $.meta_info.output + "/ADT/simpleaf_quant",
             },
         },
-        
+
         #-----------------------------------------------------------------------#
         # Advanced config section 3 : HTO modality
         HTO : {
             simpleaf_index : {
+
             #-----------------------------------------------------------------------#
-                # section 3.1. simpleaf index arguments
+                # section 3.1 reference options
+                ref_type : {
+                    # The arguments of the default option should be set in fast_config,
+                    # For other options, select one from the following options and fill in the required arguments below
+                    # "spliceu", "direct_ref" or "existing_index" 
+                    type : "direct_ref", 
+
+                    # Option 1 : direct_ref
+                    # DO NOT change unless you have a 
+                    direct_ref : {
+                        ref_seq : $.external_commands.HTO_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : $.external_commands.HTO_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                    },
+
+                    # Option 2 : existing_index
+                    existing_index : {
+                        map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+                        t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                    },
+                },
+
+            #-----------------------------------------------------------------------#
+                # section 3.2 simpleaf index arguments
                 # If no special requirements, please use the default arguments
                 arguments : {	
                     active : true, # if false, simpleaf index command will be skipped
@@ -283,14 +330,14 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # section 3.2. provide simpleaf index output directory
+                # section 3.3 provide simpleaf index output directory
                 # If no special requirements, please use the default arguments
                 output : $.meta_info.output + "/HTO/simpleaf_index",
             },
 
             simpleaf_quant : {
             #-----------------------------------------------------------------------#
-                # section 3.3. mapping options
+                # section 3.4 mapping options
                 map_type : {
                     # The arguments of the default option should be set in fast_config,
                     # For other options, select one from the following options and fill in the required arguments below
@@ -303,14 +350,14 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # section 3.4. provide cell filter strategy
+                # section 3.5 provide cell filter strategy
                 cell_filt_type : {
                     # The arguments of the default option has been set,
                     # For other options, select one from the following options and fill in the required arguments below
                     # "unfiltered_pl", "knee", "expect_cells", "forced_cells", or "explicit_pl"
                     type : "explicit_pl",
                     
-                    explicit_pl : $.workflow.external_commands.barcode_translation.quant_cb,   # This defines `simpleaf quant --explicit-pl`
+                    explicit_pl : $.workflow.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",   # This defines `simpleaf quant --explicit-pl`
                     unfiltered_pl : true, # or unfiltered_pl : "path/to/whitelist" # This defines `simpleaf quant --unfiltered-pl`
                     knee : false, # or knee : true  # This defines `simpleaf quant --knee`
                     expect_cells : null, # e.g., 10000 # This defines `simpleaf quant --expect-cells`
@@ -318,7 +365,7 @@ local template = {
                 },
 
             #-----------------------------------------------------------------------#
-                # section 3.5. provide simpleaf quant arguments
+                # section 3.6 provide simpleaf quant arguments
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
@@ -331,13 +378,11 @@ local template = {
                 },
 
                 #----------------------------#
-                # section 3.6 : provide simpleaf quant output directory
+                # section 3.7 : provide simpleaf quant output directory
                 # If no special requirements, please use the default arguments
                 output : $.meta_info.output + "/HTO/simpleaf_quant",
             },
         },
-
-
 	},
 	#----------------------------------------------------------------------------------------#
 	# --- > NOTE : The following sections are ONLY for developers. < --- #
@@ -347,8 +392,8 @@ local template = {
 	# do not modify anything below line
 	##########################################
 	meta_info : {
-        template_name:  "CITE-seq ADT+HTO with 10x Chromium 3' v2 (TotalSeq-A chemistry)",
-        template_id: "cite-seq-ADT+HTO_10xv2",
+        template_name :  "CITE-seq ADT with 10x Chromium 3' v2 (TotalSeq-A chemistry)",
+        template_id : "cite-seq-ADT_10xv2",
         template_version : "0.0.4",
 	} + meta_info,
 	
@@ -371,14 +416,14 @@ local template = {
         },
         ADT : {        
             simpleaf_index : utils.simpleaf_index(
-                11, 
-                $.workflow.external_commands.ADT_feature_barcode_ref.ref_type, 
+                6, 
+                utils.ref_type($.advanced_config.ADT.simpleaf_index.ref_type), 
                 $.advanced_config.ADT.simpleaf_index.arguments, 
                 $.advanced_config.ADT.simpleaf_index.output,
             ),
 
             simpleaf_quant : utils.simpleaf_quant(
-                12, 
+                7, 
                 utils.map_type($.advanced_config.ADT.simpleaf_quant.map_type + $.fast_config.ADT, $.workflow.ADT.simpleaf_index),
                 utils.cell_filt_type($.advanced_config.ADT.simpleaf_quant.cell_filt_type),
                 $.advanced_config.ADT.simpleaf_quant.arguments, 
@@ -387,14 +432,14 @@ local template = {
         },
         HTO : {        
             simpleaf_index : utils.simpleaf_index(
-                18, 
-                $.workflow.external_commands.HTO_feature_barcode_ref.ref_type, 
+                11, 
+                utils.ref_type($.advanced_config.HTO.simpleaf_index.ref_type), 
                 $.advanced_config.HTO.simpleaf_index.arguments, 
                 $.advanced_config.HTO.simpleaf_index.output,
             ),
 
             simpleaf_quant : utils.simpleaf_quant(
-                19, 
+                12, 
                 utils.map_type($.advanced_config.HTO.simpleaf_quant.map_type + $.fast_config.HTO, $.workflow.HTO.simpleaf_index),
                 utils.cell_filt_type($.advanced_config.HTO.simpleaf_quant.cell_filt_type),
                 $.advanced_config.HTO.simpleaf_quant.arguments, 
@@ -402,21 +447,19 @@ local template = {
             ),
         },
         external_commands : {
-            barcode_translation : utils.barcode_translation(
-                3, 
-                "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz", 
-                $.advanced_config.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",
-                $.advanced_config.gene_expression.simpleaf_quant.output
-            ),
-            ADT_feature_barcode_ref : utils.feature_barcode_ref(
-                6, 
+            [if $.fast_config.ADT.feature_barcode_csv != null then "ADT_feature_barcode_ref"] : utils.feature_barcode_ref(
+                3,
+                1,
+                4,
                 $.fast_config.ADT.feature_barcode_csv, 
-                $.advanced_config.ADT.simpleaf_index.output
+                $.workflow.ADT.simpleaf_index.output
             ),
-            HTO_feature_barcode_ref : utils.feature_barcode_ref(
-                13, 
+            [if $.fast_config.HTO.feature_barcode_csv != null then "HTO_feature_barcode_ref"] : utils.feature_barcode_ref(
+                8,
+                1,
+                4,
                 $.fast_config.HTO.feature_barcode_csv, 
-                $.advanced_config.HTO.simpleaf_index.output
+                $.workflow.HTO.simpleaf_index.output
             ),
         }
 	},

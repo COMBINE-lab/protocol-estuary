@@ -79,7 +79,6 @@
     simpleaf_index(step, ref_type, arguments, output="simpleaf_index") ::
         local type = $.get(ref_type, "type");
         local active = $.get(arguments, "active");
-        local o = output + "/simpleaf_index/index";
         {
             ref_type :: ref_type,
             arguments :: arguments,
@@ -96,7 +95,7 @@
         +
         arguments +
         {
-            local o = output + "/simpleaf_index/index",
+            local o = output + "/index",
             [if type != "existing_index" then "index"] :: o,
             [if type != "existing_index" && type != "direct_ref" then "t2g_map"] :: o + "/t2g_3col.tsv",
         }
@@ -226,12 +225,14 @@
     ,
 
 
-    feature_barcode_ref(step, csv, output) ::
+    feature_barcode_ref(step, csv, name_col, barcode_col, output) ::
         {
             step :: step,
             last_step :: step + 2,
             csv :: csv,
             output :: output,
+            ref_seq :: output + "/.feature_barcode_ref.fa"
+            t2g_map :: output + "/.feature_barcode_ref_t2g.tsv",
             mkdir : {
                 active : true,
                 step: step,
@@ -242,21 +243,20 @@
                 active : true,
                 step: step + 1,
                 program_name: "awk",
-                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print $1\"\\t\"$1}'", csv, ">", output + "/.antibody_ref_t2g.tsv"],
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$" + name_col + ");print $" + name_col + "\"\\t\"$" + name_col + "}'" % , csv, ">", output + "/.feature_barcode_ref_t2g.tsv"],
             },
             
             create_fasta : {
                 active : true,
                 step: step + 2,
                 program_name: "awk",
-                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$1);print \">\"$1\"\\n\"$5}'", csv, ">", output + "/.antibody_ref.fa"]
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$" + name_col + ");print \">\"$" + name_col + "\"\\n\"$" + barcode_col + "}'", csv, ">", output + "/.feature_barcode_ref.fa"]
             },
-            
             ref_type :: {
                 type :: "direct_ref",
                 arguments :: {step: step, csv: csv, output: output},
-                t2g_map :: output + "/.antibody_ref_t2g.tsv",
-                "--ref-seq" : output + "/.antibody_ref.fa",
+                t2g_map :: output + "/.feature_barcode_ref_t2g.tsv",
+                "--ref-seq" : output + "/.feature_barcode_ref.fa",
             }
         }
     ,
