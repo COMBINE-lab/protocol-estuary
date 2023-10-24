@@ -89,7 +89,9 @@
                 program_name : "simpleaf index",
                 step : step,
                 "--output" : output,
-            } + arguments +
+            } + arguments
+        else {}
+        +
         // ref type and arguments
         if std.member(std.objectValues(ref_type), null) then
             error "The selected ref_type contains null vlaues. Cannot proceed."    
