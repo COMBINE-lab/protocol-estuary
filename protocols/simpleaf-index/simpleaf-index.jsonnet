@@ -84,16 +84,18 @@ local template = {
 			# If no special requirements, please use the default arguments
 			arguments : {	
 				active : true, # if false, simpleaf index command will be skipped
-				"--spliced" : null,
-				"--unspliced" : null,
+				"--spliced" : null, # or "path/to/extra_spliced_sequences.fa"
+				"--unspliced" : null, # or "path/to/extra_unspliced_sequences.fa"
 				"--dedup" : false,
 				"--sparse" : false,
 				"--keep-duplicates" : false,
+				"--gff3-fomrat" : false,
 				"--threads" : $.meta_info.threads,
 				"--use-pisem" : $.meta_info.use_piscem, 
 				"--overwrite" : $.meta_info.use_piscem,
 				"--kmer-length" :  31,
 				"--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+				"--decoy-paths" : null, # only if using piscem >= 0.7
 			},
 
 		#-----------------------------------------------------------------------#

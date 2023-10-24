@@ -112,16 +112,18 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {	
                     active : true, # if false, simpleaf index command will be skipped
-                    "--spliced" : null,
-                    "--unspliced" : null,
+                    "--spliced" : null, # or "path/to/extra_spliced_sequences.fa"
+                    "--unspliced" : null, # or "path/to/extra_unspliced_sequences.fa"
                     "--dedup" : false,
-                    "--sparse" : false,
                     "--keep-duplicates" : false,
+                    "--sparse" : false,
+				    "--gff3-fomrat" : false,
                     "--threads" : $.meta_info.threads,
                     "--use-pisem" : $.meta_info.use_piscem, 
                     "--overwrite" : $.meta_info.use_piscem,
                     "--kmer-length" :  31,
                     "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--decoy-paths" : null, # only if using piscem >= 0.7
                 },
 
             #-----------------------------------------------------------------------#
@@ -163,12 +165,22 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
-                    "--min-reads" : null,
+                    "--min-reads" : 10,
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem,
                     "--chemistry" :  "10xv3",
+                    "--use-selective-alignment" : false, # only if using salmon alevin as theunderlying mapper
+                    # piscem options
+                    "--use-piscem" : $.meta_info.use_piscem,
+                    "--struct-constraints" : false,
+                    "--ignore-ambig-hits" : false,
+                    "--no-poison" : false,
+                    "--skipping-strategy" : null, # Options : "strict" "permissive"
+                    "--max-ec-card" : null, # e.g., 4096
+                    "--max-hit-occ" : null, # e.g., 256
+                    "--max-hit-occ-recover" : null, # e.g., 1024
+                    "--max-read-occ" : null, # e.g., 2500
                 },
 
                 #----------------------------#
@@ -217,6 +229,7 @@ local template = {
                     "--overwrite" : $.meta_info.use_piscem,
                     "--kmer-length" :  7,
                     "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--decoy-paths" : null, # only if using piscem >= 0.7
                 },
 
             #-----------------------------------------------------------------------#
@@ -259,12 +272,22 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
-                    "--min-reads" : null,
+                    "--min-reads" : 10,
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem,
                     "--chemistry" :  "1{b[16]u[12]}2{x:r[20]f[GTTTAAGAGCTAAGCTGGAA]x:}",
+                    "--use-selective-alignment" : false, # only if using salmon alevin as theunderlying mapper
+                    # piscem options
+                    "--use-piscem" : $.meta_info.use_piscem,
+                    "--struct-constraints" : false,
+                    "--ignore-ambig-hits" : false,
+                    "--no-poison" : false,
+                    "--skipping-strategy" : null, # Options : "strict" "permissive"
+                    "--max-ec-card" : null, # e.g., 4096
+                    "--max-hit-occ" : null, # e.g., 256
+                    "--max-hit-occ-recover" : null, # e.g., 1024
+                    "--max-read-occ" : null, # e.g., 2500
                 },
 
                 #----------------------------#
@@ -290,7 +313,7 @@ local template = {
 	
 	workflow : {
         gene_expression : {
-            [if $.advanced_config.gene_expression.simpleaf_index.type != "existing_index" || $.advanced_config.gene_expression.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.gene_expression.simpleaf_index.type != "existing_index" && $.advanced_config.gene_expression.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 1, 
                 utils.ref_type($.advanced_config.gene_expression.simpleaf_index.ref_type + $.fast_config.gene_expression), 
                 $.advanced_config.gene_expression.simpleaf_index.arguments, 
@@ -306,7 +329,7 @@ local template = {
             ),
         },
         crispr_screen : {        
-            [if $.advanced_config.crispr_screen.simpleaf_index.type != "existing_index" || $.advanced_config.crispr_screen.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.crispr_screen.simpleaf_index.type != "existing_index" && $.advanced_config.crispr_screen.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 11, 
                 utils.ref_type($.advanced_config.crispr_screen.simpleaf_index.ref_type), 
                 $.advanced_config.crispr_screen.simpleaf_index.arguments, 

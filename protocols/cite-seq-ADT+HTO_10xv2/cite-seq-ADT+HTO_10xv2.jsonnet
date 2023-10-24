@@ -126,9 +126,10 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {	
                     active : true, # if false, simpleaf index command will be skipped
-                    "--spliced" : null,
-                    "--unspliced" : null,
+                    "--spliced" : null, # or "path/to/extra_spliced_sequences.fa"
+                    "--unspliced" : null, # or "path/to/extra_unspliced_sequences.fa"
                     "--dedup" : false,
+				    "--gff3-fomrat" : false,
                     "--sparse" : false,
                     "--keep-duplicates" : false,
                     "--threads" : $.meta_info.threads,
@@ -136,6 +137,7 @@ local template = {
                     "--overwrite" : $.meta_info.use_piscem,
                     "--kmer-length" :  31,
                     "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--decoy-paths" : null, # only if using piscem >= 0.7
                 },
 
             #-----------------------------------------------------------------------#
@@ -177,7 +179,7 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
-                    "--min-reads" : null,
+                    "--min-reads" : 10,
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
@@ -273,7 +275,7 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
-                    "--min-reads" : null,
+                    "--min-reads" : 10,
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
@@ -327,6 +329,7 @@ local template = {
                     "--overwrite" : $.meta_info.use_piscem,
                     "--kmer-length" :  7,
                     "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--decoy-paths" : null, # only if using piscem >= 0.7
                 },
 
             #-----------------------------------------------------------------------#
@@ -369,7 +372,7 @@ local template = {
                 # If no special requirements, please use the default arguments
                 arguments : {
                     active : true,
-                    "--min-reads" : null,
+                    "--min-reads" : 10,
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
@@ -399,7 +402,7 @@ local template = {
 	
 	workflow : {
         gene_expression : {
-            [if $.advanced_config.gene_expression.simpleaf_index.type != "existing_index" || $.advanced_config.gene_expression.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.gene_expression.simpleaf_index.type != "existing_index" && $.advanced_config.gene_expression.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 1, 
                 utils.ref_type($.advanced_config.gene_expression.simpleaf_index.ref_type + $.fast_config.gene_expression), 
                 $.advanced_config.gene_expression.simpleaf_index.arguments, 
@@ -415,7 +418,7 @@ local template = {
             ),
         },
         ADT : {        
-            [if $.advanced_config.ADT.simpleaf_index.type != "existing_index" || $.advanced_config.ADT.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.ADT.simpleaf_index.type != "existing_index" && $.advanced_config.ADT.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 6, 
                 utils.ref_type($.advanced_config.ADT.simpleaf_index.ref_type), 
                 $.advanced_config.ADT.simpleaf_index.arguments, 
@@ -431,7 +434,7 @@ local template = {
             ),
         },
         HTO : {        
-            [if $.advanced_config.HTO.simpleaf_index.type != "existing_index" || $.advanced_config.HTO.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.HTO.simpleaf_index.type != "existing_index" && $.advanced_config.HTO.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 11, 
                 utils.ref_type($.advanced_config.HTO.simpleaf_index.ref_type), 
                 $.advanced_config.HTO.simpleaf_index.arguments, 
