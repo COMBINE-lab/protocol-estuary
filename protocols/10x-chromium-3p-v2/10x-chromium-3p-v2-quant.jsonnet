@@ -157,7 +157,7 @@ local template = {
 	meta_info : {
 		template_name :  "10x Chromium 3' v2 gene expression quantification only",
 		template_id : "10x-chromium-3p-v2-quant",
-		template_version : "0.0.4",
+		template_version : "0.1.0",
 	} + meta_info,
 	
 	workflow : {

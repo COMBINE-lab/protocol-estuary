@@ -114,7 +114,7 @@ local template = {
 	meta_info : {
 		template_name :  "simpleaf index",
 		template_id : "simpleaf-index",
-		template_version : "0.0.1",
+		template_version : "0.1.0",
 	} + meta_info,
 	
 	workflow : {

@@ -428,12 +428,12 @@ local template = {
 	meta_info : {
         template_name : "10x Chromium 3' Feature Barcode Antibody Capture + CRISPR Screen (TotalSeq-B/C)",
         template_id : "10x-feature-barcode-abtibody+crispr_totalseq-b-c",
-        template_version : "0.0.4",
+        template_version : "0.1.0",
 	} + meta_info,
 	
 	workflow : {
         gene_expression : {
-            [if $.advanced_config.gene_expression.simpleaf_index.type != "existing_index" && $.advanced_config.gene_expression.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.gene_expression.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.gene_expression.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 1, 
                 utils.ref_type($.advanced_config.gene_expression.simpleaf_index.ref_type + $.fast_config.gene_expression), 
                 $.advanced_config.gene_expression.simpleaf_index.arguments, 
@@ -449,7 +449,7 @@ local template = {
             ),
         },
         antibody_capture : {        
-            [if $.advanced_config.antibody_capture.simpleaf_index.type != "existing_index" && $.advanced_config.antibody_capture.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.antibody_capture.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.antibody_capture.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 11, 
                 utils.ref_type($.advanced_config.antibody_capture.simpleaf_index.ref_type), 
                 $.advanced_config.antibody_capture.simpleaf_index.arguments, 
@@ -464,7 +464,7 @@ local template = {
                 $.advanced_config.antibody_capture.simpleaf_quant.output,
             ),
         crispr_screen : {        
-            [if $.advanced_config.crispr_screen.simpleaf_index.type != "existing_index" && $.advanced_config.crispr_screen.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            [if $.advanced_config.crispr_screen.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.crispr_screen.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
                 16, 
                 utils.ref_type($.advanced_config.crispr_screen.simpleaf_index.ref_type), 
                 $.advanced_config.crispr_screen.simpleaf_index.arguments, 
