@@ -163,7 +163,7 @@ local template = {
 	workflow : {
 		simpleaf_quant : utils.simpleaf_quant(
 			1, 
-			utils.map_type($.advanced_config.simpleaf_quant.map_type + $.fast_config, existing_index(fast_config.existing_index.index, fast_config.existing_index.t2g_map)),
+			utils.map_type($.advanced_config.simpleaf_quant.map_type + $.fast_config, utils.existing_index($.fast_config.existing_index.index, $.fast_config.existing_index.t2g_map)),
 			utils.cell_filt_type($.advanced_config.simpleaf_quant.cell_filt_type),
 			$.advanced_config.simpleaf_quant.arguments, 
 			$.advanced_config.simpleaf_quant.output,

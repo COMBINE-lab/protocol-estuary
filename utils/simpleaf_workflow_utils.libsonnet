@@ -84,6 +84,16 @@
             arguments :: arguments,
             output :: output,
         } +
+        {
+            local o = output + "/index",
+            [if type != "existing_index" then "index"] :: o,
+            [if type != "existing_index" && type != "direct_ref" then "t2g_map"] :: o + "/t2g_3col.tsv",
+        } +
+        // ref type and arguments
+        if std.member(std.objectValues(ref_type), null) then
+            error "The selected ref_type contains null vlaues. Cannot proceed."    
+        else 
+            ref_type +
         if type != "existing_index" then
             {
                 program_name : "simpleaf index",
@@ -91,18 +101,6 @@
                 "--output" : output,
             } + arguments
         else {}
-        +
-        // ref type and arguments
-        if std.member(std.objectValues(ref_type), null) then
-            error "The selected ref_type contains null vlaues. Cannot proceed."    
-        else 
-            ref_type
-        +
-        {
-            local o = output + "/index",
-            [if type != "existing_index" then "index"] :: o,
-            [if type != "existing_index" && type != "direct_ref" then "t2g_map"] :: o + "/t2g_3col.tsv",
-        }
     ,
 
     // set simpleaf quant parameter realted to mapping
@@ -197,7 +195,6 @@
             "--output" : output,
         } +
         // ref type and arguments
-
         if std.member(std.objectValues(map_type), null) then
             error "The selected map_type contains null vlaues. Cannot proceed."    
         else 
