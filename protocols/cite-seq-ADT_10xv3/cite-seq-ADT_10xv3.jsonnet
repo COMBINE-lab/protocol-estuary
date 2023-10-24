@@ -1,6 +1,6 @@
 local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
 local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
-// CITE-seq ADT with 10x Chromium 3' v3 (TotalSeq-A chemistry)
+// CITE-seq ADT with 10X Chromium 3' v3 (TotalSeq-A chemistry)
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
 # README:
@@ -102,7 +102,7 @@ local template = {
 
                     # Option 3 : existing_index
                     existing_index : {
-                        map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+                        index : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
                         t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
                     },
                 },
@@ -212,7 +212,7 @@ local template = {
 
                     # Option 2 : existing_index
                     existing_index : {
-                        map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+                        index : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
                         t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
                     },
                 },
@@ -296,7 +296,7 @@ local template = {
 	# do not modify anything below line
 	##########################################
 	meta_info : {
-        template_name :  "CITE-seq ADT with 10x Chromium 3' v3 (TotalSeq-A chemistry)",
+        template_name :  "CITE-seq ADT with 10X Chromium 3' v3 (TotalSeq-A chemistry)",
         template_id : "cite-seq-ADT_10xv3",
         template_version : "0.1.0",
 	} + meta_info,

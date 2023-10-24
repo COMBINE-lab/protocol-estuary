@@ -74,7 +74,7 @@ local template = {
 
 				# Option 3 : existing_index
 				existing_index : {
-					map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+					index : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
 					t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
 				},
 			},
