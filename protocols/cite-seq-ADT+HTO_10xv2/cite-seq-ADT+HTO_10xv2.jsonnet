@@ -263,7 +263,7 @@ local template = {
                     # "unfiltered_pl", "knee", "expect_cells", "forced_cells", or "explicit_pl"
                     type : "explicit_pl",
                     
-                    explicit_pl : $.workflow.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",   # This defines `simpleaf quant --explicit-pl`
+                    explicit_pl : $.advanced_config.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",   # This defines `simpleaf quant --explicit-pl`
                     unfiltered_pl : true, # or unfiltered_pl : "path/to/whitelist" # This defines `simpleaf quant --unfiltered-pl`
                     knee : false, # or knee : true  # This defines `simpleaf quant --knee`
                     expect_cells : null, # e.g., 10000 # This defines `simpleaf quant --expect-cells`
@@ -360,7 +360,7 @@ local template = {
                     # "unfiltered_pl", "knee", "expect_cells", "forced_cells", or "explicit_pl"
                     type : "explicit_pl",
                     
-                    explicit_pl : $.workflow.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",   # This defines `simpleaf quant --explicit-pl`
+                    explicit_pl : $.advanced_config.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",   # This defines `simpleaf quant --explicit-pl`
                     unfiltered_pl : true, # or unfiltered_pl : "path/to/whitelist" # This defines `simpleaf quant --unfiltered-pl`
                     knee : false, # or knee : true  # This defines `simpleaf quant --knee`
                     expect_cells : null, # e.g., 10000 # This defines `simpleaf quant --expect-cells`

@@ -86,6 +86,7 @@
             arguments :: arguments,
             output :: output,
         } +
+        ref_type + 
         {
             local o = output + "/index",
             [if type != "existing_index" then "index"] :: o,
@@ -94,9 +95,11 @@
         // ref type and arguments
         if std.member(std.objectValues(ref_type), null) then
             if __validate then 
-              error "The selected ref_type contains null values. Cannot proceed."    
+              error "The selected ref_type contains null values. Cannot proceed."
+            else
+              {}
         else 
-            ref_type +
+            {} +
         if type != "existing_index" then
             {
                 program_name : "simpleaf index",
@@ -204,7 +207,8 @@
         // ref type and arguments
         if std.member(std.objectValues(map_type), null) then
           if __validate then
-            error "The selected map_type contains null vlaues. Cannot proceed."    
+            error "The selected map_type contains null vlaues. Cannot proceed."
+            else {}
         else 
             map_type
     ,
