@@ -402,7 +402,7 @@ local template = {
 	
 	workflow : {
         gene_expression : {
-            [if $.advanced_config.gene_expression.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.gene_expression.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            simpleaf_index : utils.simpleaf_index(
                 1, 
                 utils.ref_type($.advanced_config.gene_expression.simpleaf_index.ref_type + $.fast_config.gene_expression), 
                 $.advanced_config.gene_expression.simpleaf_index.arguments, 
@@ -418,7 +418,7 @@ local template = {
             ),
         },
         ADT : {        
-            [if $.advanced_config.ADT.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.ADT.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            simpleaf_index : utils.simpleaf_index(
                 6, 
                 utils.ref_type($.advanced_config.ADT.simpleaf_index.ref_type), 
                 $.advanced_config.ADT.simpleaf_index.arguments, 
@@ -434,7 +434,7 @@ local template = {
             ),
         },
         HTO : {        
-            [if $.advanced_config.HTO.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.HTO.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            simpleaf_index : utils.simpleaf_index(
                 11, 
                 utils.ref_type($.advanced_config.HTO.simpleaf_index.ref_type), 
                 $.advanced_config.HTO.simpleaf_index.arguments, 

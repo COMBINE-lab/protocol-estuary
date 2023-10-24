@@ -313,7 +313,7 @@ local template = {
 	
 	workflow : {
         gene_expression : {
-            [if $.advanced_config.gene_expression.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.gene_expression.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            simpleaf_index : utils.simpleaf_index(
                 1, 
                 utils.ref_type($.advanced_config.gene_expression.simpleaf_index.ref_type + $.fast_config.gene_expression), 
                 $.advanced_config.gene_expression.simpleaf_index.arguments, 
@@ -329,7 +329,7 @@ local template = {
             ),
         },
         antibody_capture : {        
-            [if $.advanced_config.antibody_capture.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.antibody_capture.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+            simpleaf_index : utils.simpleaf_index(
                 11, 
                 utils.ref_type($.advanced_config.antibody_capture.simpleaf_index.ref_type), 
                 $.advanced_config.antibody_capture.simpleaf_index.arguments, 
@@ -338,7 +338,7 @@ local template = {
 
             simpleaf_quant : utils.simpleaf_quant(
                 12, 
-                utils.map_type($.advanced_config.antibody_capture.simpleaf_quant.map_type + $.fast_config.antibody_capture, $.workflow.antibody_capture.simpleaf_index),
+                utils.map_type($.advanced_config.antibody_capture.simpleaf_quant.map_type + $.fast_config.antibody_capture, if $.advanced_config.antibody_capture.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.antibody_capture.simpleaf_quant.map_type.type != "existing_mappings" then $.workflow.antibody_capture.simpleaf_index else $.advanced_config.antibody_capture.simpleaf_index.ref_type.existing_index),
                 utils.cell_filt_type($.advanced_config.antibody_capture.simpleaf_quant.cell_filt_type),
                 $.advanced_config.antibody_capture.simpleaf_quant.arguments, 
                 $.advanced_config.antibody_capture.simpleaf_quant.output,
