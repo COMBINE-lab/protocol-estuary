@@ -182,7 +182,7 @@ local template = {
 	} + meta_info,
 	
 	workflow : {
-		[if $.advanced_config.simpleaf_index.ref_type.type != "existing_index" && $.advanced_config.simpleaf_quant.map_type.type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+		simpleaf_index : utils.simpleaf_index(
 			1, 
 			utils.ref_type($.advanced_config.simpleaf_index.ref_type + $.fast_config), 
 			$.advanced_config.simpleaf_index.arguments, 
