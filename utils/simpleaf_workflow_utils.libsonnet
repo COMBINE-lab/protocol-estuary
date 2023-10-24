@@ -199,15 +199,14 @@
             step : step,
             "--output" : output,
         } +
+        cell_filt_type +
+        arguments +
         // ref type and arguments
         if std.member(std.objectValues(map_type), null) then
           if __validate then
             error "The selected map_type contains null vlaues. Cannot proceed."    
         else 
             map_type
-        +
-        cell_filt_type +
-        arguments
     ,
 
     get(o, f, use_default = false, default = null)::
