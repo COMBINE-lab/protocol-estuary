@@ -1,6 +1,6 @@
 local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
 local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
-// 10x Chromium 3' v2 gene expression data processing
+// 10x Chromium 3' v3 gene expression reads quantification
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
 # README:
@@ -33,17 +33,16 @@ local template = {
 		# Fast config
 		##############
 		#-----------------------------------------------------------------------#
-		# section 1 . provide genome fasta and gtf files to build a splici index
-		# For other ref types, please check the "advanced_config/ref_type" sections.
-		splici : {
-			gtf : null, # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
-			fasta : null, # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
-			rlen : 98,  # This defines `/workflow/simpleaf_index/--rlen`
-		}
-		,
+		# section 1 . provide the existing index directory
+        # If you have the mapping results, skip this and provide mapping dir in the advanced_config/map_type section
+        existing_index : {
+            map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+            t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+        },
 
 		#-----------------------------------------------------------------------#
 		# 2. provide comma separated read fastq files for mapping
+        # If you have the mapping results, skip this and provide mapping dir in the advanced_config/map_type section
 		map_reads : {
 			reads1 : null, # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
 			reads2 : null, # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
@@ -62,28 +61,8 @@ local template = {
 		#-----------------------------------------------------------------------#
 			# 1. reference options
 			ref_type : {
-				# The arguments of the default option should be set in fast_config,
-				# For other options, select one from the following options and fill in the required arguments below
-				# "spliceu", "direct_ref" or "existing_index" 
-				type : "splici", 
-
-				# Option 1 : spliceu
-				spliceu : {
-					gtf : null, # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
-					fasta : null, # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
-				},
-
-				# Option 2 : direct_ref
-				direct_ref : {
-					ref_seq : null, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
-					t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
-				},
-
-				# Option 3 : existing_index
-				existing_index : {
-					map_dir : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
-					t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
-				},
+                # DO NOT CHANGE
+				type : "existing_index", 
 			},
 
 		#-----------------------------------------------------------------------#
@@ -147,7 +126,7 @@ local template = {
 				"--expected-ori" :  "fw",
 				"--threads" :  $.meta_info.threads,
 				"--use-piscem" : $.meta_info.use_piscem,
-				"--chemistry" :  "10xv2",
+				"--chemistry" :  "10xv3",
 			},
 
 			#----------------------------#
@@ -164,22 +143,15 @@ local template = {
 	# do not modify anything below line
 	##########################################
 	meta_info : {
-		template_name :  "10x Chromium 3' v2 gene expression",
-		template_id : "10x-chromium-3p-v2",
+		template_name :  "10x Chromium 3' v3 gene expression quantification only",
+		template_id : "10x-chromium-3p-v3-quant",
 		template_version : "0.0.4",
 	} + meta_info,
 	
 	workflow : {
-		[if $.advanced_config.simpleaf_index.type != "existing_index" || $.advanced_config.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
-			1, 
-			utils.ref_type($.advanced_config.simpleaf_index.ref_type + $.fast_config), 
-			$.advanced_config.simpleaf_index.arguments, 
-			$.advanced_config.simpleaf_index.output,
-		),
-
 		simpleaf_quant : utils.simpleaf_quant(
-			2, 
-			utils.map_type($.advanced_config.simpleaf_quant.map_type + $.fast_config, $.workflow.simpleaf_index),
+			1, 
+			utils.map_type($.advanced_config.simpleaf_quant.map_type + $.fast_config, existing_index(fast_config.existing_index.index, fast_config.existing_index.t2g_map)),
 			utils.cell_filt_type($.advanced_config.simpleaf_quant.cell_filt_type),
 			$.advanced_config.simpleaf_quant.arguments, 
 			$.advanced_config.simpleaf_quant.output,

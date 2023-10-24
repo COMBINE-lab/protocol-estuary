@@ -1,6 +1,6 @@
 local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
 local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
-// CITE-seq ADT with 10x Chromium 3' v2 (TotalSeq-A chemistry)
+// 10x Chromium 3' Feature Barcode Antibody Capture (TotalSeq-B/C)
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
 # README:
@@ -41,7 +41,7 @@ local template = {
             splici : {
                 gtf : null, # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
                 fasta : null, # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
-                rlen : 98,  # This defines `/workflow/simpleaf_index/--rlen`
+                rlen : 91,  # This defines `/workflow/simpleaf_index/--rlen`
             },
 
             #-----------------------------------------------------------------------#
@@ -52,8 +52,8 @@ local template = {
             },
         },
         #-----------------------------------------------------------------------#
-        # Fast config section 2 . ADT modality
-        ADT : {
+        # Fast config section 2 . antibody capture modality
+        antibody_capture : {
             #-----------------------------------------------------------------------#
             # section 2.1 provide genome fasta and gtf files to build a splici index
             feature_barcode_csv : null, # REQUIRED
@@ -168,7 +168,7 @@ local template = {
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
                     "--use-piscem" : $.meta_info.use_piscem,
-                    "--chemistry" :  "10xv2",
+                    "--chemistry" :  "10xv3",
                 },
 
                 #----------------------------#
@@ -179,8 +179,8 @@ local template = {
         },
 
         #-----------------------------------------------------------------------#
-        # Advanced config section 2 : ADT modality
-        ADT : {
+        # Advanced config section 2 : antibody capture modality
+        antibody_capture : {
             simpleaf_index : {
 
             #-----------------------------------------------------------------------#
@@ -194,8 +194,8 @@ local template = {
                     # Option 1 : direct_ref
                     # DO NOT change unless you have a 
                     direct_ref : {
-                        ref_seq : $.workflow.external_commands.ADT_feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
-                        t2g_map : $.workflow.external_commands.ADT_feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+                        ref_seq : $.workflow.external_commands.feature_barcode_ref.ref_seq, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+                        t2g_map : $.workflow.external_commands.feature_barcode_ref.t2g_map, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
                     },
 
                     # Option 2 : existing_index
@@ -222,7 +222,7 @@ local template = {
             #-----------------------------------------------------------------------#
                 # section 2.3 provide simpleaf index output directory
                 # If no special requirements, please use the default arguments
-                output : $.meta_info.output + "/ADT/simpleaf_index",
+                output : $.meta_info.output + "/antibody_capture/simpleaf_index",
             },
 
             simpleaf_quant : {
@@ -264,13 +264,13 @@ local template = {
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
                     "--use-piscem" : $.meta_info.use_piscem,
-                    "--chemistry" :  "1{b[16]u[10]}2{r[15]}",
+                    "--chemistry" :  "1{b[16]u[12]}2{x[10]r[15]x:}",
                 },
 
                 #----------------------------#
                 # section 2.7 : provide simpleaf quant output directory
                 # If no special requirements, please use the default arguments
-                output : $.meta_info.output + "/ADT/simpleaf_quant",
+                output : $.meta_info.output + "/antibody_capture/simpleaf_quant",
             },
         },
 
@@ -283,8 +283,8 @@ local template = {
 	# do not modify anything below line
 	##########################################
 	meta_info : {
-        template_name :  "CITE-seq ADT with 10x Chromium 3' v2 (TotalSeq-A chemistry)",
-        template_id : "cite-seq-ADT_10xv2",
+        template_name : "10x Chromium 3' Feature Barcode Antibody Capture (TotalSeq-B/C)",
+        template_id : "10x-feature-barcode-antibody_totalseq-b-c",
         template_version : "0.0.4",
 	} + meta_info,
 	
@@ -305,29 +305,35 @@ local template = {
                 $.advanced_config.gene_expression.simpleaf_quant.output,
             ),
         },
-        ADT : {        
-            [if $.advanced_config.ADT.simpleaf_index.type != "existing_index" || $.advanced_config.ADT.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
-                6, 
-                utils.ref_type($.advanced_config.ADT.simpleaf_index.ref_type), 
-                $.advanced_config.ADT.simpleaf_index.arguments, 
-                $.advanced_config.ADT.simpleaf_index.output,
+        antibody_capture : {        
+            [if $.advanced_config.antibody_capture.simpleaf_index.type != "existing_index" || $.advanced_config.antibody_capture.simpleaf_quant.map_type != "existing_mappings" then "simpleaf_index"] : utils.simpleaf_index(
+                11, 
+                utils.ref_type($.advanced_config.antibody_capture.simpleaf_index.ref_type), 
+                $.advanced_config.antibody_capture.simpleaf_index.arguments, 
+                $.advanced_config.antibody_capture.simpleaf_index.output,
             ),
 
             simpleaf_quant : utils.simpleaf_quant(
-                7, 
-                utils.map_type($.advanced_config.ADT.simpleaf_quant.map_type + $.fast_config.ADT, $.workflow.ADT.simpleaf_index),
-                utils.cell_filt_type($.advanced_config.ADT.simpleaf_quant.cell_filt_type),
-                $.advanced_config.ADT.simpleaf_quant.arguments, 
-                $.advanced_config.ADT.simpleaf_quant.output,
+                12, 
+                utils.map_type($.advanced_config.antibody_capture.simpleaf_quant.map_type + $.fast_config.antibody_capture, $.workflow.antibody_capture.simpleaf_index),
+                utils.cell_filt_type($.advanced_config.antibody_capture.simpleaf_quant.cell_filt_type),
+                $.advanced_config.antibody_capture.simpleaf_quant.arguments, 
+                $.advanced_config.antibody_capture.simpleaf_quant.output,
             ),
         },
         external_commands : {
-            [if $.fast_config.ADT.feature_barcode_csv != null then "ADT_feature_barcode_ref"] : utils.feature_barcode_ref(
-                3,
-                $.fast_config.ADT.feature_barcode_csv, 
+            barcode_translation : utils.barcode_translation(
+                3, 
+                "https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz", 
+                $.advanced_config.gene_expression.simpleaf_quant.output + "/af_quant/alevin/quants_mat_rows.txt",
+                $.advanced_config.gene_expression.simpleaf_quant.output
+            ),
+            [if $.fast_config.antibody_capture.feature_barcode_csv != null then "feature_barcode_ref"] : utils.feature_barcode_ref(
+                8,
+                $.fast_config.antibody_capture.feature_barcode_csv, 
                 1,
-                4,
-                $.advanced_config.ADT.simpleaf_index.output,
+                5,
+                $.advanced_config.antibody_capture.simpleaf_index.output
             ),
         }
 	},
