@@ -3,6 +3,8 @@
 // https://simpleaf.readthedocs.io/en/latest/workflow-utility-library.html
 
 {
+    local __validate = std.extVar("__validate"), # system variable, DO NOT MODIFY
+
     get_field(o,f) ::
       if std.member(std.objectValues(std.get(o, f)), null) then
         error "The provided " + f + " must be filled out. Cannot proceed."
@@ -91,7 +93,8 @@
         } +
         // ref type and arguments
         if std.member(std.objectValues(ref_type), null) then
-            error "The selected ref_type contains null vlaues. Cannot proceed."    
+            if __validate then 
+              error "The selected ref_type contains null values. Cannot proceed."    
         else 
             ref_type +
         if type != "existing_index" then
@@ -124,6 +127,7 @@
                 "--t2g-map" : $.get(arguments, "t2g_map"),
             } 
         else
+          if __validate then
             error "Unknown mapping type: %s" % type
     ,
 
@@ -162,7 +166,8 @@
                 "--explicit-pl" : argument,
             } 
         else
-            error "Unknown cell filtering type: %s" % type
+            if __validate then 
+              error "Unknown cell filtering type: %s" % type
     ,
     unfiltered_pl(permitlist) ::
         $.cell_filt_type("unfiltered_pl", permitlist)
@@ -196,6 +201,7 @@
         } +
         // ref type and arguments
         if std.member(std.objectValues(map_type), null) then
+          if __validate then
             error "The selected map_type contains null vlaues. Cannot proceed."    
         else 
             map_type
