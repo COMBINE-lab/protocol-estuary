@@ -463,6 +463,7 @@ local template = {
                 $.advanced_config.antibody_capture.simpleaf_quant.arguments, 
                 $.advanced_config.antibody_capture.simpleaf_quant.output,
             ),
+        },
         crispr_screen : {        
             simpleaf_index : utils.simpleaf_index(
                 16, 
