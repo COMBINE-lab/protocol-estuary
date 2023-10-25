@@ -1,6 +1,6 @@
 local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
 local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
-// 10X Chromium 3' v2 gene expression data processing
+// simpleaf index
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
 # README:
@@ -41,13 +41,6 @@ local template = {
 			rlen : 98,  # This defines `/workflow/simpleaf_index/--rlen`
 		}
 		,
-
-		#-----------------------------------------------------------------------#
-		# 2. provide comma separated read fastq files for mapping
-		map_reads : {
-			reads1 : null, # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
-			reads2 : null, # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
-		},
 	},
 
 	#---------------------------------------------------------------------------#
@@ -110,63 +103,6 @@ local template = {
 			# If no special requirements, please use the default arguments
 			output : $.meta_info.output + "/simpleaf_index",
 		},
-
-		simpleaf_quant : {
-		#-----------------------------------------------------------------------#
-			# 4. mapping options
-			map_type : {
-				# The arguments of the default option should be set in fast_config,
-				# For other options, select one from the following options and fill in the required arguments below
-				type : "map_reads", # "existing_mappings"
-				existing_mappings : {
-					map_dir : null, # e.g., "path/to/existing_mappings" # This defines `simpleaf quant --map-dir`
-					t2g_map : null, # e.g., "path/to/existing_mappings/t2g.tsv" or "t2g_3col.tsv" # This defines `simpleaf quant --t2g-map`
-				},
-			},
-
-		#-----------------------------------------------------------------------#
-			# 5. provide cell filter strategy
-			cell_filt_type : {
-				# The arguments of the default option has been set,
-				# For other options, select one from the following options and fill in the required arguments below
-				# "unfiltered_pl", "knee", "expect_cells", "forced_cells", or "explicit_pl"
-				type : "unfiltered_pl", # "existing_cell_filt"
-				
-				unfiltered_pl : true, # or unfiltered_pl : "path/to/whitelist" # This defines `simpleaf quant --unfiltered-pl`
-				knee : false, # or knee : true  # This defines `simpleaf quant --knee`
-				expect_cells : null, # e.g., 10000 # This defines `simpleaf quant --expect-cells`
-				forced_cells : null, # e.g., 10000 # This defines `simpleaf quant --forced-cells`
-				explicit_pl : null,  # e.g., "path/to/whitelist" # This defines `simpleaf quant --explicit-pl`
-			},
-
-		#-----------------------------------------------------------------------#
-			# 6. provide simpleaf quant arguments
-			# If no special requirements, please use the default arguments
-			arguments : {
-				active : true,
-				"--min-reads" : 10,
-				"--resolution" :  "cr-like",
-				"--expected-ori" :  "fw",
-				"--threads" :  $.meta_info.threads,
-				"--chemistry" :  "10xv2",
-				"--use-selective-alignment" : false, # only if using salmon alevin as theunderlying mapper
-				# piscem options
-				"--use-piscem" : $.meta_info.use_piscem,
-				"--struct-constraints" : false,
-				"--ignore-ambig-hits" : false,
-				"--no-poison" : false,
-				"--skipping-strategy" : null, # Options : "strict" "permissive"
-				"--max-ec-card" : null, # e.g., 4096
-				"--max-hit-occ" : null, # e.g., 256
-				"--max-hit-occ-recover" : null, # e.g., 1024
-				"--max-read-occ" : null, # e.g., 2500
-			},
-
-			#----------------------------#
-			# 4. provide simpleaf quant output directory
-			# If no special requirements, please use the default arguments
-			output : $.meta_info.output + "/simpleaf_quant",
-		},
 	},
 	#----------------------------------------------------------------------------------------#
 	# --- > NOTE : The following sections are ONLY for developers. < --- #
@@ -176,8 +112,8 @@ local template = {
 	# do not modify anything below line
 	##########################################
 	meta_info : {
-		template_name :  "10X Chromium 3' v2 gene expression",
-		template_id : "10x-chromium-3p-v2",
+		template_name :  "simpleaf index",
+		template_id : "simpleaf-index",
 		template_version : "0.1.0",
 	} + meta_info,
 	
@@ -187,14 +123,6 @@ local template = {
 			utils.ref_type($.advanced_config.simpleaf_index.ref_type + $.fast_config), 
 			$.advanced_config.simpleaf_index.arguments, 
 			$.advanced_config.simpleaf_index.output,
-		),
-
-		simpleaf_quant : utils.simpleaf_quant(
-			2, 
-			utils.map_type($.advanced_config.simpleaf_quant.map_type + $.fast_config, $.workflow.simpleaf_index),
-			utils.cell_filt_type($.advanced_config.simpleaf_quant.cell_filt_type),
-			$.advanced_config.simpleaf_quant.arguments, 
-			$.advanced_config.simpleaf_quant.output,
 		),
 	},
 };

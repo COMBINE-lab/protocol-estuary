@@ -3,6 +3,14 @@
 // https://simpleaf.readthedocs.io/en/latest/workflow-utility-library.html
 
 {
+    local __validate = std.extVar("__validate"), # system variable, DO NOT MODIFY
+
+    get_field(o,f) ::
+      if std.member(std.objectValues(std.get(o, f)), null) then
+        error "The provided " + f + " must be filled out. Cannot proceed."
+      else
+        std.get(o, f)
+    ,
     // input: two boolean
     // output: logical or
     logical_or(a,b)::
@@ -15,13 +23,199 @@
         a && b
     ,
 
-    // this function returns the querying field of the object if it exiests,
-    // otherwise, it returns an error  
-    // input: an object, a field name
-    // output: the field of the object if exist
+    # function ref_type:
+    ref_type(obj) ::
+        local type = $.get(obj, "type");
+        local arguments = $.get(obj, type);
+        {
+            type :: type,
+            arguments :: arguments,
+        } +
+        if type == "splici" || type == "spliced+intronic" then
+            {   
+                "--ref-type" : "splici",
+                "--fasta" : $.get(arguments, "fasta"),
+                "--gtf" : $.get(arguments, "gtf"),
+                "--rlen" : $.get(arguments, "rlen", true, 91),
+            } 
+        else if type == "spliceu" || type == "spliced+unspliced" then
+            {
+                "--ref-type" : "spliceu",
+                "--fasta" : $.get(arguments, "fasta"),
+                "--gtf" : $.get(arguments, "gtf"),
+            } 
+        else if type == "direct_ref" then
+            {
+                "--ref-seq" : $.get(arguments, "ref_seq"),
+                t2g_map :: $.get(arguments, "t2g_map"),
+            } 
+        else if type == "existing_index" then
+            {
+                index :: $.get(arguments, "index"),
+                t2g_map :: $.get(arguments, "t2g_map"),
+            }
+        else
+            error "Unknown reference type: %s" % type
+    ,
+
+    splici(fasta, gtf, rlen = 91) ::
+        $.ref_type("splici", {fasta: fasta, gtf: gtf, rlen: if rlen == null then 91 else rlen})
+    ,
+    spliceu(fasta, gtf) ::
+        $.ref_type("spliceu", {fasta: fasta, gtf: gtf})
+    ,
+    direct_ref(ref_seq, t2g_map) ::
+        $.ref_type("direct_ref", {ref_seq: ref_seq, t2g_map: t2g_map})
+    ,
+    existing_index(index, t2g_map) ::
+        $.ref_type("existing_index", {index: index, t2g_map: t2g_map})
+    ,
+
+    // create a simpleaf index record
+    // input: 
+    // 1. the output of function ref_type,
+    // 2. the arguments of the simpleaf index command
+    // 3. the output directory
+    // This function create a simpleaf index record
+    // There are two hidden fields: index and t2g_map.
+    simpleaf_index(step, ref_type, arguments, output="simpleaf_index") ::
+        local type = $.get(ref_type, "type");
+        local active = $.get(arguments, "active");
+        {
+            ref_type :: ref_type,
+            arguments :: arguments,
+            output :: output,
+        } +
+        ref_type + 
+        {
+            local o = output + "/index",
+            [if type != "existing_index" then "index"] :: o,
+            [if type != "existing_index" && type != "direct_ref" then "t2g_map"] :: o + "/t2g_3col.tsv",
+        } +
+        // ref type and arguments
+        if std.member(std.objectValues(ref_type), null) then
+            if __validate then 
+              error "The selected ref_type contains null values. Cannot proceed."
+            else
+              {}
+        else 
+            {} +
+        if type != "existing_index" then
+            {
+                program_name : "simpleaf index",
+                step : step,
+                "--output" : output,
+            } + arguments
+        else {}
+    ,
+
+    // set simpleaf quant parameter realted to mapping
+    map_type(obj, simpleaf_index = {}) ::
+        local type = $.get(obj, "type");
+        local arguments = $.get(obj, type);
+        {
+            type :: type,
+            arguments :: arguments,
+        } +
+        if type == "map_reads" then
+            {
+                "--index" : $.get(simpleaf_index, "index"),
+                "--t2g-map": $.get(simpleaf_index, "t2g_map"),
+                "--reads1" : $.get(arguments, "reads1"),
+                "--reads2" : $.get(arguments, "reads2"),
+            }
+        else if type == "existing_mappings" then
+            {
+                "--map-dir" : $.get(arguments, "map_dir"),
+                "--t2g-map" : $.get(arguments, "t2g_map"),
+            } 
+        else
+          if __validate then
+            error "Unknown mapping type: %s" % type
+    ,
+
+    map_reads(reads1, reads2, simpleaf_index = {}) ::
+        $.map_type("map_reads", {reads1: reads1, reads2: reads2}, simpleaf_index)
+    ,
+    existing_mappings(map_dir, t2g_map) ::
+        $.map_type("existing_mappings", {map_dir: map_dir, t2g_map: t2g_map})
+    ,
+
+    cell_filt_type(obj) ::
+        local type = $.get(obj, "type");
+        local argument = $.get(obj, type);
+        {
+            type :: type,
+            argument :: argument,
+        } +
+        if type == "unfiltered_pl" then
+            {
+                "--unfiltered-pl" : argument,
+            } 
+        else if type == "knee" then
+            {
+                "--knee" : argument,
+            } 
+        else if type == "forced" then
+            {
+                "--forced-cells" : argument,
+            } 
+        else if type == "expect" then
+            {
+                "--expect-cells" : argument,
+            } 
+        else if type == "explicit_pl" then
+            {
+                "--explicit-pl" : argument,
+            } 
+        else
+            if __validate then 
+              error "Unknown cell filtering type: %s" % type
+    ,
+    unfiltered_pl(permitlist) ::
+        $.cell_filt_type("unfiltered_pl", permitlist)
+    ,
+    knee() ::
+        $.cell_filt_type("knee")
+    ,
+    forced_cells(num_cells) ::
+        $.cell_filt_type("forced", num_cells)
+    ,
+    expect_cells(num_cells) ::
+        $.cell_filt_type("expect", num_cells)
+    ,
+    explicit_pl(permitlist) ::
+        $.cell_filt_type("explicit_pl", permitlist)
+    ,
+
+    // create a simpleaf quant record
+    simpleaf_quant(step, map_type, cell_filt_type, arguments, output) ::
+        local map = $.get(map_type, "type");
+        local filt = $.get(cell_filt_type, "type");
+        local active = $.get(arguments, "active");
+        {
+            map_type :: map_type,
+            cell_filt_type :: cell_filt_type,
+            arguments :: arguments,
+            output :: output,
+            program_name : "simpleaf quant",
+            step : step,
+            "--output" : output,
+        } +
+        cell_filt_type +
+        arguments +
+        // ref type and arguments
+        if std.member(std.objectValues(map_type), null) then
+          if __validate then
+            error "The selected map_type contains null vlaues. Cannot proceed."
+            else {}
+        else 
+            map_type
+    ,
+
     get(o, f, use_default = false, default = null)::
         if std.isObject(o) then
-            if std.objectHas(o, f) then
+            if std.objectHasAll(o, f) then
                 o[f]
             else if use_default then
                 default
@@ -32,6 +226,136 @@
         else
             error "Cannot get fields from a value: '%s'. " % o
     ,
+    
+    ml(use_piscem,klen) :: 
+        if use_piscem then
+            std.ceil(klen / 1.8) + 1
+        else
+            null
+    ,
+
+
+    feature_barcode_ref(step, csv, name_col, barcode_col, output) ::
+        {
+            step :: step,
+            last_step :: step + 2,
+            csv :: csv,
+            output :: output,
+            ref_seq :: output + "/.feature_barcode_ref.fa",
+            t2g_map :: output + "/.feature_barcode_ref_t2g.tsv",
+            mkdir : {
+                active : true,
+                step: step,
+                program_name: "mkdir",
+                arguments: ["-p", output]
+            },
+            create_t2g : {
+                active : true,
+                step: step + 1,
+                program_name: "awk",
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$" + name_col + ");print $" + name_col + "\"\\t\"$" + name_col + "}'", csv, ">", output + "/.feature_barcode_ref_t2g.tsv"],
+            },
+            
+            create_fasta : {
+                active : true,
+                step: step + 2,
+                program_name: "awk",
+                arguments: ["-F","','","'NR>1 {sub(/ /,\"_\",$" + name_col + ");print \">\"$" + name_col + "\"\\n\"$" + barcode_col + "}'", csv, ">", output + "/.feature_barcode_ref.fa"]
+            },
+            ref_type :: {
+                type :: "direct_ref",
+                arguments :: {step: step, csv: csv, output: output},
+                t2g_map :: output + "/.feature_barcode_ref_t2g.tsv",
+                "--ref-seq" : output + "/.feature_barcode_ref.fa",
+            }
+        }
+    ,
+
+    barcode_translation(step, url, quant_cb, output) ::
+    {
+        step :: step,
+        last_step :: step + 4,
+        url :: url,
+        quant_cb :: quant_cb,
+        output :: output,
+        mkdir : {
+            active : true,
+            step : step,
+            program_name : "mkdir",
+            arguments : ["-p", output]
+        },
+
+        fetch_cb_translation_file : {
+            active : true,
+            step : step + 1,
+            program_name : "wget",
+            arguments : ["-O", output + "/.barcode.txt.gz", url],
+        },
+
+        unzip_cb_translation_file : {
+            active : true,
+            step : step + 2,
+            "program_name" : "gunzip",
+            "arguments": ["-c", output + "/.barcode.txt.gz", ">", output + "/.barcode.txt"],
+        },
+
+        backup_bc_file : {
+            active : true,
+            step: step + 3,
+            program_name: "mv",
+            arguments: [quant_cb, quant_cb + ".bkp"],
+        },
+
+        // Translate RNA barcode to feature barcode
+        barcode_translation : {
+            active : true,
+            step: step + 4,
+            program_name: "awk",
+            arguments: ["'FNR==NR {dict[$1]=$2; next} {$1=($1 in dict) ? dict[$1] : $1}1'", output + "/.barcode.txt", quant_cb + ".bkp", ">", quant_cb],
+        },  
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // This function checks if there are simpleaf arguments in the object
     // according to the internal arg library we if there are, returns an error  
@@ -45,11 +369,11 @@
             // skip meta info and root layer values
             if field_name == "meta_info" || !std.isObject(field) then
                 field
-            // if we see Step, then this field should be a command record
-            else if std.objectHas(field, "Step") then
-                // there should be a Program Name field
-                if std.objectHas(field, "Program Name") then
-                    local program_name = $.get(field, "Program Name"); 
+            // if we see step, then this field should be a command record
+            else if std.objectHas(field, "step") then
+                // there should be a program_name field
+                if std.objectHas(field, "program_name") then
+                    local program_name = $.get(field, "program_name"); 
                     // check if it is a simpleaf command
                     if std.objectHas($.SimpleafPrograms, program_name) then
                         if std.foldl(
@@ -71,7 +395,7 @@
                     else
                         field
                 else
-                    error "Found record with Step but no  Program Name: %s; Cannot proceed." % path + field_name
+                    error "Found record with step but no  program_name: %s; Cannot proceed." % path + field_name
             else
                 $.check_invalid_args(field,  path + field_name + " -> ")
         for field_name in std.objectFields(o)
@@ -133,11 +457,11 @@
             [field_name]:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if  std.objectHas(field, "Step") then
-                        if !std.objectHas(field, "Program Name") then
-                            error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % name + field_name
+                    if  std.objectHas(field, "step") then
+                        if !std.objectHas(field, "program_name") then
+                            error "Found a command record with no 'program_name' field: %s; Cannot proceed." % name + field_name
                         else
-                            local program_name = $.get(field, "Program Name");
+                            local program_name = $.get(field, "program_name");
                             local program_args = $.get($.SimpleafPrograms, program_name, use_default=true);
                             if program_args != null then
                                 if std.objectHas(program_args, "--output") then
@@ -276,11 +600,11 @@
             [field_name] +:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if std.objectHas(field, "Step") then
-                        if !std.objectHas(field, "Program Name") then
-                            error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % path
+                    if std.objectHas(field, "step") then
+                        if !std.objectHas(field, "program_name") then
+                            error "Found a command record with no 'program_name' field: %s; Cannot proceed." % path
                         else
-                            local program_name = $.get(field, "Program Name");
+                            local program_name = $.get(field, "program_name");
                             // if we see "simpleaf index" then we process it
                             if std.objectHas($.SimpleafPrograms, program_name) then
                                 // then find the correspondence of the possible 
@@ -332,11 +656,11 @@
             [field_name]:
                 if std.isObject(field) then
                     // if it is a simpleaf command record, then we add --output if doesn't exist
-                    if  std.objectHas(field, "Step") then
-                        if !std.objectHas(field, "Program Name") then
-                            error "Found a command record with no 'Program Name' field: %s; Cannot proceed." % name + field_name
+                    if  std.objectHas(field, "step") then
+                        if !std.objectHas(field, "program_name") then
+                            error "Found a command record with no 'program_name' field: %s; Cannot proceed." % name + field_name
                         else
-                            local program_name = $.get(field, "Program Name");
+                            local program_name = $.get(field, "program_name");
                             local program_args = $.get($.SimpleafPrograms, program_name, use_default=true);
                             if program_args != null then
                                 field + std.prune({
@@ -420,7 +744,6 @@
     // this function only works for the experiment who has both simpleaf_index and simpleaf_quant
     // records
     add_index_dir_for_simpleaf_index_quant_combo(o)::
-
         if std.isObject(o) then
             // check if it has a record called `simpleaf_index`
             if  std.objectHas(o, "simpleaf_index") then
@@ -461,9 +784,9 @@
     {
         'simpleaf index': {
             // This is used for deciding by which order the commands are run
-            "Step": null,
-            "Program Name": 'simpleaf index',
-            "Active": null,
+            "step": null,
+            "program_name": 'simpleaf index',
+            "active": null,
 
             // output directory
             "--output": null,
@@ -493,9 +816,9 @@
         },
         'simpleaf quant': {
             // This is used for deciding by which order the commands are run
-            "Step": null,
-            "Program Name": 'simpleaf quant',
-            "Active": null,
+            "step": null,
+            "program_name": 'simpleaf quant',
+            "active": null,
 
             // Options
             '--chemistry': null,

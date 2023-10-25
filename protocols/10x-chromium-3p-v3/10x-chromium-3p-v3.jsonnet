@@ -1,239 +1,201 @@
-
-// 10x Chromium 3' v3 gene expression data processing
+local utils = std.extVar("__utils"); # system variable, DO NOT MODIFY
+local output = if std.type(std.extVar("__output")) == "null" then error "The provided value to the system variable output was null, please avoid using it in the template." else std.extVar("__output");# system variable, DO NOT MODIFY
+// 10X Chromium 3' v3 gene expression data processing
 // https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/
 #############################################################################
 # README:
 
-# *IMPORTANT*: For most user, the fields in section "Recommended Configuration" are the only things to complete.
+# *IMPORTANT*: For most user, the sections in "template/fast_config" are the only things to complete.
 
-# To modify an argument, please replace the Right hand side of each field (separated by `:`) with your value **wrapped in quotes**.
-# For example, you can replace `"output": null` in the meta_info section with `"output": "/path/to/output/dir"`, and `"threads": null` with `"threads": "16"`
+# For example, you can complete the arguments for splici reference build by replacing the null value with a valid path to a gene GTF file.
+
 # All fields that are null, empty array ([]), and empty dictionary ({}) will be pruned (ignored).
 
-# NOTE: You can pass optional simpleaf arguments specified in the "Optional Configuration" section.
+# NOTE: You can pass optional simpleaf arguments specified in the advanced-config and optional config sections.
 #############################################################################
 
-local workflow = {
+# meta_info contains meta information of the workflow
+local meta_info = {
+	# number of threads for all commands
+	threads : 16, # change to other integer if needed # This defines `simpleaf index/quant --threads`
 
-    // Meta information
-    "meta_info": {
-        "template_name":  "10x Chromium 3' v3 gene expression",
-        "template_id": "10x-chromium-3p-v3",
-        "template_version": "0.0.1",
+	# boolean, true or false
+	use_piscem : false, # or use_piscem: false # This defines `simpleaf index/quant --use-piscem`
 
-        // This value will be assigned to all simpleaf commands that have no --threads arg specified
-        // Optional: commands will use their default setting if this is null.
-        "threads": null, // "threads": "16",
-        
-        // The parent directory of all simpleaf command output folders.
-        // If this is leaved as null, you have to specify `--output` when running `simpleaf workflow`
-        "output": null, // "output": "/path/to/output",
-
-        // this meta flag says if piscem, instead of the default choice salmon, should be used for indexing and mapping for all applicable simpleaf commands.
-        "use-piscem": false, // "use-piscem": true,
-    },
-
-#######################################################################################################################
-// *Recommended* Configuration: 
-//  For MOST users, the fields listed in the "Recommended Configuration" section are the only fields
-//  that needs to be filled. You should replace all null values with valid values, 
-//  as described in the comment lines (those start with double slashes `//`) .
-
-//  For advanced users, you can check other simpleaf arguments listed in the "Optional Configurtion" section.
-######################################################################################################################
-    
-    // **For most users**, ONLY the information in the "Recommended Configuration" section needs to be completed.
-    // For advanced usage, please check the "Optional Configuration" field.
-    "Recommended Configuration": {
-        // Arguments for running `simpleaf index`
-        "simpleaf_index": {
-            // these two fields are required for all command records.
-            "Step": 1,
-            "Program Name": "simpleaf index",
-            // Recommeneded Reference: spliced + intronic transcriptome (splici) 
-            // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-intronic-transcriptome-reference
-            // You can find other reference options in the "Optional Configuration" field. You must choose one type of reference
-            "spliced+intronic (splici) reference": {
-                // genome fasta file of the studied species
-                "--fasta": null,
-                // gene annotation gtf file of the studied species
-                "--gtf": null,
-                // read length, usually it is "91" for 10xv3 datasets.
-                // Please check the description of your experiment to make sure
-                "--rlen": "91",
-            },
-        },
-
-        // Information for running `simpleaf quant`
-        "simpleaf_quant": {
-            "Step": 2,
-            "Program Name": "simpleaf quant",
-            // Recommended Mapping Option: Mapping reads against the splici reference generated by the simpleaf index command above.
-            // Other mapping options can be found in the "Optional Configuration" section
-            "Recommended Mapping option": {
-                "Mapping Reads FASTQ Files": {
-                    // read1 (technical reads) files separated by comma (,)
-                    // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                    // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                    // Change "*_R1_*" to the file name pattern of your files if it dosn't fit
-                    "--reads1": null,
-
-                    // read2 (biological reads) files separated by comma (,)
-                    // having multiple files and they are all in a directory? try the following bash command to get their name (Don't forget to quote them!)
-                    // $ find -L your/fastq/absolute/path -name "*_R1_*" -type f | sort | paste -sd, -
-                    // Change "*_R1_*" to the file name pattern of your files if it dosn't fit
-                    "--reads2": null,
-                },
-            },
-        },
-    },
-
-
-
-
-
-##########################################################################################################
-# OPTIONAL : The configuration options below are optional, and may be of most interest to advanced users
-
-# If you want tyo skip invoking some commands, for example, when the exactly same command had been run before, 
-# you can also change their "Active" to false.
-# Simpleaf will ignore all commands with "Active": false
-#########################################################################################################
-
-    "Optional Configuration": {
-        // Optioanal arguments for running `simpleaf index`
-        "simpleaf_index": {
-            // The required fields
-            "Step": 1,
-            "Program Name": "simpleaf index",
-            "Active": true,
-
-            "Other Reference Options": {
-                // spliced + unspliced transcriptome
-                // https://pyroe.readthedocs.io/en/latest/building_splici_index.html#preparing-a-spliced-unspliced-transcriptome-reference
-                "1. spliced+unspliced (spliceu)": {
-                    // specify reference type as spliced+unspliced (spliceu)
-                    "--ref-type": null, // "--ref-type": "spliced+unspliced",
-                    // The path to the genome FASTA file
-                    "--fasta": null,
-                    // The path to the gene annotation GTF file
-                    "--gtf": null,
-                },
-
-                // Direct Reference
-                // If the species doesn"t have its genome available,
-                // you can pass the reference sequence FASTA file as `--ref-seq`.
-                // simpleaf will build index directly using the given file 
-                "2. Direct Reference": {
-                    // The path to the reference sequence FASTA file
-                    "--ref-seq": null,
-                },
-            },
-            
-            // If null, this argument will be automatically completed by the template.
-            "--output": null,
-            "--spliced": null,
-            "--unspliced": null,
-            "--threads": null,
-            "--dedup": null,
-            "--sparse": null,
-            "--kmer-length": null,
-            "--overwrite": null,
-            "--use-piscem": null,
-            "--minimizer-length": null,
-            "--keep-duplicates": null,
-        },
-        // arguments for running `simpleaf quant`
-        "simpleaf_quant": {
-            // The required fields first 
-            "Step": 2,
-            "Program Name": "simpleaf quant",
-            "Active": true,
-
-            // the transcript name to gene name mapping TSV file.
-            // Simpleaf will find the correct t2g map file for splici and spliceu reference.
-            // This is required ONLY if `--ref-seq` is specified in the corresponding simpleaf index command. 
-            "--t2g-map": null,
-
-            "Other Mapping Options": {
-                // Option 1:
-                // If you have built the reference index already, 
-                // you can change the Step of the simpleaf index call above to a quoted negative integer,
-                // and specify the path to the index here  
-                "1. Mapping Reads FASTQ Files against an existing index": {
-                    // read1 (technical reads) files separated by comma (,)
-                    "--reads1": null,
-
-                    // read2 (biological reads) files separated by comma (,)
-                    "--reads2": null,
-
-                    // the path to an EXISTING salmon/piscem reference index
-                    "--index": null
-                },
-
-                // Option 2:
-                // Choose only if you have an existing mapping directory and don"t want to rerun mapping
-                "2. Existing Mapping Directory": {
-                    // the path to an existing salmon/piscem mapping result directory
-                    "--map-dir": null,
-                },
-            },
-
-            "Cell Filtering Options": {
-                // No cell filtering, but correct cell barcodes according to a permitlist file
-                // If you would like to use other cell filtering options, please change this field to null,
-                // and select one cell filtering strategy listed in the "Optional Configuration section"
-                // DEFAULT
-                "--unfiltered-pl": "", // or "--unfiltered-pl": null 
-
-                // 2. knee finding cell filtering. If choosing this, change the value from null to "".
-                "--knee": null, // or "--knee": "",
-
-                // 3. A hard threshold. If choosing this, change the value from null to an integer
-                "--forced-cells": null, // or "--forced-cells": "INT", for example, "--forced-cells": "3000"
-
-                // 4. A soft threshold. If choosing this, change the null to an integer
-                "--expect-cells": null, //or "--expect-cells": "INT", for example, "--expect-cells": "3000"
-
-                // 5. filter cells using an explicit whitelist. Only use when you know exactly the 
-                // true barcodes. 
-                // If choosing this, change the null to the path to the whitelist file. 
-                "--explicit-pl": null, // or "--explicit-pl": "/path/to/pl",
-            },
-            "--chemistry": "10xv3",
-            "--resolution": "cr-like",
-            "--expected-ori": "fw",
-
-            // If null, this argument will be automatically completed by the template.
-            "--output": null,
-
-            // If "--threads" is null but the "threads" meta info field is not,
-            // "threads" meta data will be used to complete this "--threads".
-            "--threads": null,
-
-            "--min-reads": null,
-            "--use-piscem": null,
-            "--use-selective-alignment": null,
-        },
-    },
+	# Output directory. Do not change if setting `--output` from command line
+	output: output, # or output: "/path/to/output/dir" # this defines `simpleaf index/quant --output`
 };
 
-##########################################################################################################
-// PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
-// PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
-// PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
-// PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
-// PLEASE DO NOT CHANGE ANYTHING BELOW THIS LINE
-// The content below is used for parsing the config file in simpleaf internally.
-#########################################################################################################
+local template = {
+	# meta info of the workflow
+	fast_config : {
+		##############
+		# Fast config
+		##############
+		#-----------------------------------------------------------------------#
+		# section 1 . provide genome fasta and gtf files to build a splici index
+		# For other ref types, please check the "advanced_config/ref_type" sections.
+		splici : {
+			gtf : null, # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
+			fasta : null, # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
+			rlen : 91,  # This defines `/workflow/simpleaf_index/--rlen`
+		}
+		,
 
-local utils = std.extVar("__utils");
-local output = std.extVar("__output");
+		#-----------------------------------------------------------------------#
+		# 2. provide comma separated read fastq files for mapping
+		map_reads : {
+			reads1 : null, # e.g., "path/to/read1_1.fq.gz,path/to/read1_2.fq.gz" # This defines `simpleaf quant --reads1`
+			reads2 : null, # e.g., "path/to/read2_1.fq.gz,path/to/read2_2.fq.gz" # This defines `simpleaf quant --reads2`
+		},
+	},
 
-local workflow1 = utils.combine_main_sections(workflow);
-local workflow2 = utils.add_meta_args(workflow1);
+	#---------------------------------------------------------------------------#
+	# ---- > If using default settings, stop here and run this template. < ---- #
+	#---------------------------------------------------------------------------#
 
-// post processing. 
-// decide if running external program calls.
-local workflow3 = utils.add_index_dir_for_simpleaf_index_quant_combo(workflow2);
-workflow3
+	##################
+	# advanced config
+	##################
+	advanced_config : {
+		simpleaf_index : {
+		#-----------------------------------------------------------------------#
+			# 1. reference options
+			ref_type : {
+				# The arguments of the default option should be set in fast_config,
+				# For other options, select one from the following options and fill in the required arguments below
+				# "spliceu", "direct_ref" or "existing_index" 
+				type : "splici", 
+
+				# Option 1 : spliceu
+				spliceu : {
+					gtf : null, # e.g., "path/to/genes.gtf" # This defines `/workflow/simpleaf_index/--gtf`
+					fasta : null, # e.g., "path/to/genome.fa" # This defines `/workflow/simpleaf_index/--fasta`
+				},
+
+				# Option 2 : direct_ref
+				direct_ref : {
+					ref_seq : null, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+				},
+
+				# Option 3 : existing_index
+				existing_index : {
+					index : null, # e.g., "path/to/existing_index" # This defines `/workflow/simpleaf_quant/--index`
+					t2g_map : null, # e.g., "path/to/existing_index/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+				},
+			},
+
+		#-----------------------------------------------------------------------#
+			# 2. simpleaf index arguments
+			# If no special requirements, please use the default arguments
+			arguments : {	
+				active : true, # if false, simpleaf index command will be skipped
+				"--spliced" : null, # or "path/to/extra_spliced_sequences.fa"
+				"--unspliced" : null, # or "path/to/extra_unspliced_sequences.fa"
+				"--dedup" : false,
+				"--sparse" : false,
+				"--keep-duplicates" : false,
+				"--gff3-fomrat" : false,
+				"--threads" : $.meta_info.threads,
+				"--use-pisem" : $.meta_info.use_piscem, 
+				"--overwrite" : $.meta_info.use_piscem,
+				"--kmer-length" :  31,
+				"--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+				"--decoy-paths" : null, # only if using piscem >= 0.7
+			},
+
+		#-----------------------------------------------------------------------#
+			# 3. provide simpleaf index output directory
+			# If no special requirements, please use the default arguments
+			output : $.meta_info.output + "/simpleaf_index",
+		},
+
+		simpleaf_quant : {
+		#-----------------------------------------------------------------------#
+			# 4. mapping options
+			map_type : {
+				# The arguments of the default option should be set in fast_config,
+				# For other options, select one from the following options and fill in the required arguments below
+				type : "map_reads", # "existing_mappings"
+				existing_mappings : {
+					map_dir : null, # e.g., "path/to/existing_mappings" # This defines `simpleaf quant --map-dir`
+					t2g_map : null, # e.g., "path/to/existing_mappings/t2g.tsv" or "t2g_3col.tsv" # This defines `simpleaf quant --t2g-map`
+				},
+			},
+
+		#-----------------------------------------------------------------------#
+			# 5. provide cell filter strategy
+			cell_filt_type : {
+				# The arguments of the default option has been set,
+				# For other options, select one from the following options and fill in the required arguments below
+				# "unfiltered_pl", "knee", "expect_cells", "forced_cells", or "explicit_pl"
+				type : "unfiltered_pl", # "existing_cell_filt"
+				
+				unfiltered_pl : true, # or unfiltered_pl : "path/to/whitelist" # This defines `simpleaf quant --unfiltered-pl`
+				knee : false, # or knee : true  # This defines `simpleaf quant --knee`
+				expect_cells : null, # e.g., 10000 # This defines `simpleaf quant --expect-cells`
+				forced_cells : null, # e.g., 10000 # This defines `simpleaf quant --forced-cells`
+				explicit_pl : null,  # e.g., "path/to/whitelist" # This defines `simpleaf quant --explicit-pl`
+			},
+
+		#-----------------------------------------------------------------------#
+			# 6. provide simpleaf quant arguments
+			# If no special requirements, please use the default arguments
+			arguments : {
+				active : true,
+				"--min-reads" : 10,
+				"--resolution" :  "cr-like",
+				"--expected-ori" :  "fw",
+				"--threads" :  $.meta_info.threads,
+				"--chemistry" :  "10xv3",
+				"--use-selective-alignment" : false, # only if using salmon alevin as theunderlying mapper
+				# piscem options
+				"--use-piscem" : $.meta_info.use_piscem,
+				"--struct-constraints" : false,
+				"--ignore-ambig-hits" : false,
+				"--no-poison" : false,
+				"--skipping-strategy" : null, # Options : "strict" "permissive"
+				"--max-ec-card" : null, # e.g., 4096
+				"--max-hit-occ" : null, # e.g., 256
+				"--max-hit-occ-recover" : null, # e.g., 1024
+				"--max-read-occ" : null, # e.g., 2500
+			},
+
+			#----------------------------#
+			# 4. provide simpleaf quant output directory
+			# If no special requirements, please use the default arguments
+			output : $.meta_info.output + "/simpleaf_quant",
+		},
+	},
+	#----------------------------------------------------------------------------------------#
+	# --- > NOTE : The following sections are ONLY for developers. < --- #
+	#----------------------------------------------------------------------------------------#
+
+	##########################################
+	# do not modify anything below line
+	##########################################
+	meta_info : {
+		template_name :  "10X Chromium 3' v3 gene expression",
+		template_id : "10x-chromium-3p-v3",
+		template_version : "0.1.0",
+	} + meta_info,
+	
+	workflow : {
+		simpleaf_index : utils.simpleaf_index(
+			1, 
+			utils.ref_type($.advanced_config.simpleaf_index.ref_type + $.fast_config), 
+			$.advanced_config.simpleaf_index.arguments, 
+			$.advanced_config.simpleaf_index.output,
+		),
+
+		simpleaf_quant : utils.simpleaf_quant(
+			2, 
+			utils.map_type($.advanced_config.simpleaf_quant.map_type + $.fast_config, $.workflow.simpleaf_index),
+			utils.cell_filt_type($.advanced_config.simpleaf_quant.cell_filt_type),
+			$.advanced_config.simpleaf_quant.arguments, 
+			$.advanced_config.simpleaf_quant.output,
+		),
+	},
+};
+
+template
