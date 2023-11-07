@@ -98,7 +98,7 @@ local template = {
 				"--keep-duplicates" : false,
 				"--gff3-fomrat" : false,
 				"--threads" : $.meta_info.threads,
-				"--use-pisem" : $.meta_info.use_piscem, 
+				"--use-piscem" : $.meta_info.use_piscem, 
 				"--overwrite" : $.meta_info.use_piscem,
 				"--kmer-length" :  31,
 				"--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
