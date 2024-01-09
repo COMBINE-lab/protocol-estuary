@@ -76,6 +76,8 @@ local template = {
 				# Option 2 : direct_ref
 				direct_ref : {
 					ref_seq : null, # e.g., "path/to/transcriptome.fa" # This defines `/workflow/simpleaf_index/--ref-seq`
+					t2g_map : null, # e.g., "path/to/t2g.tsv" or "t2g_3col.tsv" # This defines `/workflow/simpleaf_quant/--t2g-map`
+
 				},
 
 				# Option 3 : existing_index
