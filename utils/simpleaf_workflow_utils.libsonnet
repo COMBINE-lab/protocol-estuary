@@ -59,16 +59,16 @@
     ,
 
     splici(fasta, gtf, rlen = 91) ::
-        $.ref_type("splici", {fasta: fasta, gtf: gtf, rlen: if rlen == null then 91 else rlen})
+        $.ref_type({type: "splici", splici: {fasta: fasta, gtf: gtf, rlen: if rlen == null then 91 else rlen}})
     ,
     spliceu(fasta, gtf) ::
-        $.ref_type("spliceu", {fasta: fasta, gtf: gtf})
+        $.ref_type({type: "spliceu", spliceu:  {fasta: fasta, gtf: gtf}})
     ,
     direct_ref(ref_seq, t2g_map) ::
-        $.ref_type("direct_ref", {ref_seq: ref_seq, t2g_map: t2g_map})
+        $.ref_type({type: "direct_ref", direct_ref: {ref_seq: ref_seq, t2g_map: t2g_map}})
     ,
     existing_index(index, t2g_map) ::
-        $.ref_type("existing_index", {index: index, t2g_map: t2g_map})
+        $.ref_type({type: "existing_index", existing_index: {index: index, t2g_map: t2g_map}})
     ,
 
     // create a simpleaf index record
