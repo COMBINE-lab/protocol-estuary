@@ -19,9 +19,6 @@ local meta_info = {
     # number of threads for all commands
     threads : 16, # change to other integer if needed # This defines `simpleaf index/quant --threads`
 
-    # boolean, true or false
-    use_piscem : false, # or use_piscem: false # This defines `simpleaf index/quant --use-piscem`
-
     # Output directory. Do not change if setting `--output` from command line
     output: output, # or output: "/path/to/output/dir" # this defines `simpleaf index/quant --output`
 };
@@ -133,10 +130,10 @@ local template = {
                     "--sparse" : false,
                     "--keep-duplicates" : false,
                     "--threads" : $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem, 
-                    "--overwrite" : $.meta_info.use_piscem,
+                    "--overwrite" : true,
+                    "--work-dir" : null,
                     "--kmer-length" :  31,
-                    "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--minimizer-length" : utils.ml(std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
                     "--decoy-paths" : null, # only if using piscem >= 0.7
                 },
 
@@ -183,7 +180,6 @@ local template = {
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem,
                     "--chemistry" :  "10xv2",
                 },
 
@@ -229,10 +225,10 @@ local template = {
                     "--sparse" : false,
                     "--keep-duplicates" : false,
                     "--threads" : $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem, 
-                    "--overwrite" : $.meta_info.use_piscem,
+                    "--overwrite" : true,
+                    "--work-dir" : null,
                     "--kmer-length" :  7,
-                    "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get($.advanced_config.ADT.simpleaf_index.arguments, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--minimizer-length" : utils.ml(std.get($.advanced_config.ADT.simpleaf_index.arguments, "--kmer-length")), # a quick way to calculate minimizer length
                 },
 
             #-----------------------------------------------------------------------#
@@ -279,7 +275,6 @@ local template = {
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem,
                     "--chemistry" :  "1{b[16]u[10]}2{r[15]}",
                 },
 
@@ -325,10 +320,10 @@ local template = {
                     "--sparse" : false,
                     "--keep-duplicates" : false,
                     "--threads" : $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem, 
-                    "--overwrite" : $.meta_info.use_piscem,
+                    "--overwrite" : true,
+                    "--work-dir" : null,
                     "--kmer-length" :  7,
-                    "--minimizer-length" : utils.ml($.meta_info.use_piscem, std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
+                    "--minimizer-length" : utils.ml(std.get(self, "--kmer-length")), # a quick way to calculate minimizer length
                     "--decoy-paths" : null, # only if using piscem >= 0.7
                 },
 
@@ -376,7 +371,6 @@ local template = {
                     "--resolution" :  "cr-like",
                     "--expected-ori" :  "fw",
                     "--threads" :  $.meta_info.threads,
-                    "--use-piscem" : $.meta_info.use_piscem,
                     "--chemistry" :  "1{b[16]u[10]}2{r[15]}",
                 },
 

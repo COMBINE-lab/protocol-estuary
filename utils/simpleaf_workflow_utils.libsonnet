@@ -227,11 +227,8 @@
             error "Cannot get fields from a value: '%s'. " % o
     ,
     
-    ml(use_piscem,klen) :: 
-        if use_piscem then
-            std.ceil(klen / 1.8) + 1
-        else
-            null
+    ml(klen) ::
+        std.ceil(klen / 1.8) + 1
     ,
 
 
@@ -650,7 +647,7 @@
             }
     ),
 
-    add_meta_args_sub(o, threads, use_piscem, output, name)::
+    add_meta_args_sub(o, threads, output, name)::
     {
             local field = $.get(o, field_name),
             [field_name]:
@@ -681,49 +678,22 @@
                                             output + "/" + field_name
                                     ,
 
-                                    // // TODO: abundon this chunk when piscem bug is fixed
-                                    // // currently piscem has an bug: it will fail if setting custom kmer length.
-                                    // // So, here I check if --kmer-length flag is set. 
-                                    // // If it is set, then no piscem. Otherwise, we can call piscem if asked
-                                    // // If this bug is fixed, then we can turn to the logics implmented below
                                     [
-                                        if std.objectHas(program_args, "--use-piscem") && use_piscem then 
-                                            "--use-piscem"
-                                    ]: ""
-                                    ,
-                                    [
-                                        if program_name == "simpleaf index" &&
-                                            use_piscem 
-                                        then
-                                            "--overwrite"
-                                    ]: "",
-
-                                    // TODO: ask Julio if we have some simple formula to set minimizer length according to kmer length 
-                                    // In piscem, minimizer length must be smaller than kmer length
-                                    // however, salmon doesn't use minimizer, so it doesn't have this restriction
-                                    // As we want to switch between salmon and piscem, when using piscem, we have to manually set minimizer length 
-                                    // if the kmer-length is no larger than the default minimizer length (19).
-                                    [
-                                    // get kmer and minimizer length from workflow 
                                     local given_kmer_length = $.get(field, "--kmer-length", use_default=true);
                                     local given_minimizer_length = $.get(field, "--minimizer-length", use_default=true);
-                                    
-                                    // set the criteria
-                                    if program_name == "simpleaf index" && use_piscem then
+                                    if program_name == "simpleaf index" then
                                         if given_kmer_length != null && given_minimizer_length == null then
-                                            // default minimizer-length is 19, make sure the provided kmer-length is greater than that
                                             if std.parseInt(given_kmer_length) < 20 then
                                                 "--minimizer-length"
                                     ]:
-                                        // the same var defined above cannot be recognized in this scope
                                         local given_kmer_length = $.get(field, "--kmer-length", use_default=true, default=31);
-                                        // 1.8 is used here because by using this, passing 31 here will get 19
                                         std.toString(std.ceil(std.parseInt(given_kmer_length)/1.8)+1)
+                                    ,
                                 })
                             else
                                 field
                     else
-                        $.add_meta_args_sub(field, threads, use_piscem, "%s/%s" % [output, field_name], name + field_name + " -> ")
+                        $.add_meta_args_sub(field, threads, "%s/%s" % [output, field_name], name + field_name + " -> ")
                 else
                     field
         for field_name in std.objectFields(o)
@@ -734,9 +704,7 @@
         local output = $.get_output(o);
         local mi = $.get(o, "meta_info", use_default=true);
         local threads = $.get(mi, "threads", use_default=true);
-        local use_piscem = $.get(mi, "use-piscem", use_default=true, default = false);
-
-        $.add_meta_args_sub(o, threads, use_piscem, output, "") + 
+        $.add_meta_args_sub(o, threads, output, "") +
             {meta_info+: {output: output}}
     ,
 
@@ -809,10 +777,10 @@
             '--sparse': null,
             '--kmer-length': null,
             '--overwrite': null,
-            '--use-piscem': null,
             '--ref-type': null,
             '--minimizer-length': null,
-            '--keep-duplicates': null
+            '--keep-duplicates': null,
+            '--work-dir': null
         },
         'simpleaf quant': {
             // This is used for deciding by which order the commands are run
@@ -842,8 +810,6 @@
             '--index': null,
             '--reads1': null,
             '--reads2': null,
-            '--use-piscem': null,
-            '--use-selective-alignment': null,
             '--map-dir': null
         },
     }
